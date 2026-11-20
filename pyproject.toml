@@ -1,0 +1,35 @@
+[project]
+name = "hecto-project"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88 # 포맷 시 사용하는 목표 줄 길이
+extend-exclude = ["experiments"]
+
+[tool.ruff.lint]
+select = [
+    "E4",  # import 관련 기본 규칙
+    "E7",  # 문장과 비교 표현 규칙 (예: None 비교에 is 사용)
+    "E9",  # 중복 매개변수 등 심각한 코드 오류
+    "F",   # 정의되지 않은 변수, 사용하지 않는 import 등 기본 오류
+    "I",   # import 그룹 구분과 정렬
+    "ANN", # 매개변수와 반환값의 타입 힌트 누락 검사
+]
+
+[tool.ruff.format]
+quote-style = "double" # 문자열은 기본적으로 큰따옴표 사용
+indent-style = "space" # 들여쓰기는 탭 대신 공백 사용 (기본 4칸)
+line-ending = "lf" # Mac과 Windows에서 줄 끝 형식을 LF로 통일
+
+[tool.ty.src]
+exclude = ["experiments"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.7.0",
+    "ruff>=0.17.6",
+    "ty>=0.0.107",
+]
