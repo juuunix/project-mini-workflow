@@ -1,0 +1,24 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+
+# Python package build artifacts
+/build/
+/dist/
+*.egg-info/
+.eggs/
+
+# Python test, coverage, and lint artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
