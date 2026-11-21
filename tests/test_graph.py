@@ -108,6 +108,9 @@ def test_llm_retry_policy_matches_architecture() -> None:
     assert LLM_RETRY_POLICY.retry_on == (TimeoutError, ConnectionError)
 
 
+ROUTES = {SEARCH_TOOL_NAME: SEARCH_NODE, DATE_TOOL_NAME: DATE_NODE}
+
+
 def tool_request(tool_name: str) -> AIMessage:
     return AIMessage(
         content="", tool_calls=[{"name": tool_name, "args": {}, "id": "call_1"}]
@@ -117,23 +120,23 @@ def tool_request(tool_name: str) -> AIMessage:
 def test_route_sends_search_request_to_search_node() -> None:
     state: AgentState = {"messages": [tool_request(SEARCH_TOOL_NAME)]}
 
-    assert route_after_llm(state) == SEARCH_NODE
+    assert route_after_llm(state, ROUTES) == SEARCH_NODE
 
 
 def test_route_sends_date_request_to_date_node() -> None:
     state: AgentState = {"messages": [tool_request(DATE_TOOL_NAME)]}
 
-    assert route_after_llm(state) == DATE_NODE
+    assert route_after_llm(state, ROUTES) == DATE_NODE
 
 
 def test_route_ends_when_llm_answers_in_text() -> None:
     state: AgentState = {"messages": [AIMessage("안녕하세요")]}
 
-    assert route_after_llm(state) == END
+    assert route_after_llm(state, ROUTES) == END
 
 
 def test_route_rejects_tool_without_node() -> None:
     state: AgentState = {"messages": [tool_request("send_email")]}
 
     with pytest.raises(ValueError, match="send_email"):
-        route_after_llm(state)
+        route_after_llm(state, ROUTES)

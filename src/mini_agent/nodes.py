@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from datetime import date
-from typing import NotRequired, TypedDict
+from typing import NotRequired, Protocol, TypedDict
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, ToolCall, ToolMessage
@@ -39,6 +39,12 @@ class Failure(TypedDict):
 
 class AgentState(MessagesState):
     failure: NotRequired[Failure]
+
+
+class ToolRunner(Protocol):
+    """도구 요청을 실행하는 노드의 모양. 마지막 메시지의 도구 요청에 결과 메시지로 답한다."""
+
+    def __call__(self, state: AgentState) -> MessagesUpdate: ...
 
 
 class LLMNode:
