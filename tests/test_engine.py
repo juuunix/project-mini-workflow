@@ -2,6 +2,7 @@ import operator
 from typing import Annotated, NoReturn, TypedDict
 
 import pytest
+from langgraph.errors import GraphRecursionError
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
@@ -23,8 +24,11 @@ class AppendName:
 
 
 class RaiseError:
+    def __init__(self, error: Exception | None = None) -> None:
+        self.error = error or ValueError("boom")
+
     def __call__(self, state: PathState) -> dict[str, list[str]]:
-        raise ValueError("boom")
+        raise self.error
 
 
 class CountRuns:
@@ -113,6 +117,19 @@ def test_node_failure_with_handler_records_handling_and_succeeds() -> None:
     ]
     assert not result.history[1].succeeded
     assert result.state == {"path": ["A", "RECOVER"]}
+
+
+def test_recursion_error_raised_by_node_is_node_failure() -> None:
+    # 노드 안에서 난 GraphRecursionError(예: 하위 그래프의 상한 초과)는
+    # 바깥 그래프의 단계 수 상한 초과가 아니라 그 노드의 실패다.
+    error = GraphRecursionError("하위 그래프의 상한 초과")
+    graph = build_chain([("A", RaiseError(error))])
+
+    result = run_graph(graph, {"path": []})
+
+    assert result.stop_reason is not None
+    assert result.stop_reason.kind is StopKind.NODE_FAILURE
+    assert result.stop_reason.node == "A"
 
 
 def test_endless_loop_stops_with_step_limit_exceeded() -> None:

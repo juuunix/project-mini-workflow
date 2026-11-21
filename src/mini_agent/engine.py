@@ -77,22 +77,25 @@ def run_graph(
                         failed_node, node_error = record.node, event["error"]
                     log_record(record, event["error"])
                     history.append(record)
-    except GraphRecursionError:
-        stop_reason = StopReason(
-            kind=StopKind.STEP_LIMIT_EXCEEDED,
-            node=history[-1].node if history else "",
-            detail=messages.step_limit_detail(recursion_limit),
-        )
-        return stopped(history, state, stop_reason)
     except Exception as caught:
-        # 노드 밖에서 발생한 오류는 기록하지 않고 다시 던진다. 받는 쪽이 traceback과 함께 기록한다.
-        if failed_node is None or caught is not node_error:
+        if failed_node is not None and caught is node_error:
+            # 노드가 던진 예외는 종류와 상관없이 그 노드의 실패다.
+            # 노드 안의 하위 그래프가 던진 GraphRecursionError도 여기에 해당한다.
+            stop_reason = StopReason(
+                kind=StopKind.NODE_FAILURE,
+                node=failed_node,
+                detail=describe_error(caught),
+            )
+        elif isinstance(caught, GraphRecursionError):
+            # 노드가 던지지 않은 GraphRecursionError는 이 그래프의 단계 수 상한 초과다.
+            stop_reason = StopReason(
+                kind=StopKind.STEP_LIMIT_EXCEEDED,
+                node=history[-1].node if history else "",
+                detail=messages.step_limit_detail(recursion_limit),
+            )
+        else:
+            # 노드 밖에서 발생한 오류는 기록하지 않고 다시 던진다. 받는 쪽이 traceback과 함께 기록한다.
             raise
-        stop_reason = StopReason(
-            kind=StopKind.NODE_FAILURE,
-            node=failed_node,
-            detail=describe_error(caught),
-        )
         return stopped(history, state, stop_reason)
 
     log_event(logger, logging.INFO, Event.RUN_FINISHED, steps=len(history))
