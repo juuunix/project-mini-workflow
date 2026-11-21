@@ -28,7 +28,8 @@ def search_result(
     artifact: SearchArtifact = {
         "collection": collection,
         "documents": [
-            {"doc_id": f"doc-{i}", "title": title} for i, title in enumerate(titles)
+            {"doc_id": f"doc-{i}", "title": title, "passage": f"{title}의 본문"}
+            for i, title in enumerate(titles)
         ],
     }
     return ToolMessage(content="", tool_call_id=call_id, artifact=artifact)
@@ -58,7 +59,7 @@ def test_question_without_search_keyword_is_answered_directly() -> None:
     assert response.content
 
 
-def test_documents_found_in_current_are_answered_with_titles() -> None:
+def test_documents_found_in_current_are_answered_with_passage_and_reference() -> None:
     response = FakeLLM().invoke(
         conversation(
             search_request(Collection.CURRENT),
@@ -67,11 +68,12 @@ def test_documents_found_in_current_are_answered_with_titles() -> None:
     )
 
     assert response.tool_calls == []
-    assert "연차휴가 및 경조휴가 규정" in response.text
+    assert response.text.startswith("연차휴가 및 경조휴가 규정의 본문")
+    assert "참고 문서: 연차휴가 및 경조휴가 규정 (doc-0)" in response.text
     assert messages.ARCHIVE_NOTICE not in response.text
 
 
-def test_documents_found_in_archive_are_answered_with_notice() -> None:
+def test_documents_found_in_archive_are_answered_with_reference_and_notice() -> None:
     response = FakeLLM().invoke(
         conversation(
             search_request(Collection.CURRENT),
@@ -81,7 +83,8 @@ def test_documents_found_in_archive_are_answered_with_notice() -> None:
         )
     )
 
-    assert "웰니스 포인트 운영 규정" in response.text
+    assert response.text.startswith("웰니스 포인트 운영 규정의 본문")
+    assert "참고 문서: 웰니스 포인트 운영 규정 (doc-0)" in response.text
     assert messages.ARCHIVE_NOTICE in response.text
 
 

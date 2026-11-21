@@ -22,6 +22,7 @@ class Collection(StrEnum):
 class FoundDocument(TypedDict):
     doc_id: str
     title: str
+    passage: str
 
 
 class SearchArtifact(TypedDict):
@@ -54,6 +55,23 @@ def tokenize(text: str) -> list[str]:
         else:
             tokens.extend(word[i : i + 2] for i in range(len(word) - 1))
     return tokens
+
+
+# 줄 앞의 목록 기호(-, *), 제목 기호(#), 인용 기호(>), 번호("1.")를 떼어 낸다.
+LINE_MARKER = re.compile(r"^\s*(?:[-*#>]+|\d+\.)\s*")
+
+
+def best_passage(text: str, query: str) -> str:
+    """문서에서 질의의 토큰과 가장 많이 겹치는 줄을 돌려준다. 첫 줄(제목)은 뺀다.
+
+    겹치는 수가 같으면 앞의 줄을 고른다. LLM이 답의 근거로 읽을 본문이다.
+    """
+    query_tokens = set(tokenize(query))
+    lines = [LINE_MARKER.sub("", line).strip() for line in text.splitlines()[1:]]
+    candidates = [line for line in lines if line]
+    if not candidates:
+        return ""
+    return max(candidates, key=lambda line: len(query_tokens & set(tokenize(line))))
 
 
 # 점수 순으로 정렬된 검색 결과에서 관련 문서만 골라낸다. 순서는 바꾸지 않는다.

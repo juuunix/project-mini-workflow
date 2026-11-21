@@ -104,9 +104,10 @@ def test_search_node_answers_request_with_found_documents(
     assert result.tool_call_id == "call_1"
     assert result.artifact["collection"] == Collection.CURRENT
     assert result.artifact["documents"][0]["doc_id"] == "policy-01-leave"
-    assert (
-        result.text == "collection=current, count=1, titles=[연차휴가 및 경조휴가 규정]"
+    assert result.text.startswith(
+        "collection=current, count=1, titles=[연차휴가 및 경조휴가 규정], passage="
     )
+    assert "최대 5일" in result.artifact["documents"][0]["passage"]
 
 
 def test_search_node_returns_empty_result_when_nothing_found(

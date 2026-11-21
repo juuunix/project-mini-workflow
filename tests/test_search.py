@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.search import Collection, DocumentSearch, tokenize
+from mini_agent.search import Collection, DocumentSearch, best_passage, tokenize
 
 LEAVE_QUERY = "연차휴가 이월은 최대 며칠까지 가능한가요?"
 WELLNESS_QUERY = "웰니스 포인트는 어디에 쓸 수 있나요?"
@@ -52,3 +52,19 @@ def test_retired_topic_is_found_in_archive(search: DocumentSearch) -> None:
 def test_search_without_documents_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="current"):
         DocumentSearch.from_directory(tmp_path)
+
+
+def test_best_passage_picks_line_sharing_most_query_tokens() -> None:
+    text = "# 연차휴가 규정\n\n- 연차휴가는 15일이다.\n1. 남은 연차휴가는 최대 5일까지 이월할 수 있다.\n"
+
+    assert best_passage(text, "연차휴가 이월은 최대 며칠") == (
+        "남은 연차휴가는 최대 5일까지 이월할 수 있다."
+    )
+
+
+def test_best_passage_answers_leave_question_from_real_document(
+    search: DocumentSearch,
+) -> None:
+    hit = search.search(LEAVE_QUERY, Collection.CURRENT)[0]
+
+    assert "최대 5일" in best_passage(hit.document.text, LEAVE_QUERY)

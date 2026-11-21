@@ -23,7 +23,7 @@ SCENARIOS = {
         "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘",
         [LLM_NODE, SEARCH_NODE, LLM_NODE],
     ),
-    "archive": ("웰니스 포인트는 어디에 쓸 수 있는지 검색해줘", SEARCH_TWICE),
+    "archive": ("웰니스 포인트는 언제 폐지됐는지 찾아줘", SEARCH_TWICE),
     "not_found": ("사내 동호회 가입 방법 찾아줘", SEARCH_TWICE),
     "llm_timeout": (
         TIMEOUT_QUESTION,

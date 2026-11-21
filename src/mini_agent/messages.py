@@ -17,8 +17,8 @@ ARCHIVE_NOTICE = "보관 처리된 문서에서 찾은 내용이라 현재와 �
 NOT_FOUND_ANSWER = "현행 문서와 보관 문서에서 관련 문서를 찾지 못했습니다."
 
 
-def found_answer(titles: list[str]) -> str:
-    return f"관련 문서를 찾았습니다: {', '.join(titles)}"
+def found_answer(passage: str, title: str, doc_id: str) -> str:
+    return f"{passage}\n\n참고 문서: {title} ({doc_id})"
 
 
 def tool_failed_answer(tool_name: str, reason: str) -> str:

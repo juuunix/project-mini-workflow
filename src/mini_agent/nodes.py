@@ -15,6 +15,7 @@ from mini_agent.search import (
     Collection,
     DocumentSearch,
     SearchArtifact,
+    best_passage,
 )
 
 LLM_NODE = "llm"
@@ -78,19 +79,28 @@ class RagSearchNode:
         if call["name"] != SEARCH_TOOL_NAME:
             raise ValueError(messages.unsupported_tool(SEARCH_NODE, call["name"]))
         collection = Collection(call["args"]["collection"])
-        hits = self._search.search(call["args"]["query"], collection)
+        query = call["args"]["query"]
+        hits = self._search.search(query, collection)
         artifact: SearchArtifact = {
             "collection": collection,
             "documents": [
-                {"doc_id": hit.document.doc_id, "title": hit.document.title}
+                {
+                    "doc_id": hit.document.doc_id,
+                    "title": hit.document.title,
+                    "passage": best_passage(hit.document.text, query),
+                }
                 for hit in hits
             ],
         }
         # 도구는 문장을 만들지 않고 데이터만 돌려준다. 문장으로 답하는 것은 LLM의 일이다.
-        titles = ", ".join(doc["title"] for doc in artifact["documents"])
-        count = len(artifact["documents"])
+        # 답의 근거가 될 본문은 가장 관련 있는 문서의 것을 함께 넘긴다.
+        documents = artifact["documents"]
+        titles = ", ".join(doc["title"] for doc in documents)
+        content = f"collection={collection}, count={len(documents)}, titles=[{titles}]"
+        if documents:
+            content = f'{content}, passage="{documents[0]["passage"]}"'
         return ToolMessage(
-            content=f"collection={collection}, count={count}, titles=[{titles}]",
+            content=content,
             tool_call_id=call["id"],
             artifact=artifact,
         )

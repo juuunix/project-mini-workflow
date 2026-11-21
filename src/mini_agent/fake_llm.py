@@ -66,10 +66,12 @@ def answer_search_result(
     question: str, result: ToolMessage, history: list[BaseMessage]
 ) -> AIMessage:
     artifact = cast(SearchArtifact, result.artifact)
-    titles = [doc["title"] for doc in artifact["documents"]]
+    documents = artifact["documents"]
     in_archive = artifact["collection"] == Collection.ARCHIVE
-    if titles:
-        answer = messages.found_answer(titles)
+    if documents:
+        # 가장 관련 있는 문서의 본문을 답으로 삼고, 그 문서를 참고 문서로 밝힌다.
+        top = documents[0]
+        answer = messages.found_answer(top["passage"], top["title"], top["doc_id"])
         if in_archive:
             answer = f"{answer}\n{messages.ARCHIVE_NOTICE}"
         return AIMessage(answer)
