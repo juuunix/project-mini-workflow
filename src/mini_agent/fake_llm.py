@@ -16,7 +16,8 @@ from mini_agent.tools import (
 )
 
 SEARCH_KEYWORDS = ("검색해줘", "찾아줘")
-DATE_KEYWORDS = ("날짜",)
+# "날짜"만으로는 문서 질문(예: 배포 날짜 기준)과 겹쳐, 오늘 날짜를 묻는 말로 좁힌다.
+DATE_KEYWORDS = ("오늘 날짜",)
 
 
 class FakeLLM(BaseChatModel):

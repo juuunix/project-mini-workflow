@@ -171,6 +171,13 @@ def test_question_about_date_requests_date_tool() -> None:
     assert response.text == messages.DATE_NOTE
 
 
+def test_document_question_mentioning_date_requests_search() -> None:
+    # 오늘 날짜를 묻는 질문이 아니면 "날짜"라는 말이 있어도 문서를 찾는다.
+    response = FakeLLM().invoke([HumanMessage("서비스 배포 날짜 기준 찾아줘")])
+
+    assert response.tool_calls[0]["name"] == SEARCH_TOOL_NAME
+
+
 def test_date_result_is_answered_with_the_date() -> None:
     request = AIMessage(
         content="", tool_calls=[{"name": DATE_TOOL_NAME, "args": {}, "id": "call_1"}]
