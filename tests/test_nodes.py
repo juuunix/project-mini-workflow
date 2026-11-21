@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -13,17 +14,20 @@ from langgraph.runtime import ExecutionInfo, Runtime
 
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.nodes import (
+    DATE_NODE,
+    DATE_TOOL_NAME,
     ERROR_GUIDE_NODE,
     LLM_NODE,
     SEARCH_NODE,
     AgentState,
+    DateNode,
     LLMNode,
     RagSearchNode,
     attempts_of,
     error_guide,
     llm_error_handler,
     record_attempt,
-    search_error_handler,
+    tool_error_handler,
 )
 from mini_agent.search import SEARCH_TOOL_NAME, Collection, DocumentSearch, SearchHit
 
@@ -100,7 +104,9 @@ def test_search_node_answers_request_with_found_documents(
     assert result.tool_call_id == "call_1"
     assert result.artifact["collection"] == Collection.CURRENT
     assert result.artifact["documents"][0]["doc_id"] == "policy-01-leave"
-    assert "연차휴가 및 경조휴가 규정" in result.text
+    assert (
+        result.text == "collection=current, count=1, titles=[연차휴가 및 경조휴가 규정]"
+    )
 
 
 def test_search_node_returns_empty_result_when_nothing_found(
@@ -125,10 +131,10 @@ def test_search_failure_raises_out_of_node(docs_dir: Path) -> None:
         run_search_node(broken, search_request("current"))
 
 
-def test_search_error_handler_returns_failure_as_tool_result() -> None:
+def test_tool_error_handler_returns_failure_as_tool_result() -> None:
     failure = NodeError(node=SEARCH_NODE, error=FileNotFoundError("data/docs"))
 
-    command = search_error_handler(state_with(search_request("current")), failure)
+    command = tool_error_handler(state_with(search_request("current")), failure)
 
     assert command.goto == LLM_NODE
     assert isinstance(command.update, dict)
@@ -169,3 +175,27 @@ def test_error_guide_reports_failed_node_and_reason() -> None:
     assert LLM_NODE in guide.text
     assert "TimeoutError: 시간 초과" in guide.text
     assert "3번 시도" in guide.text
+
+
+def date_request(tool_name: str = DATE_TOOL_NAME) -> AIMessage:
+    return AIMessage(
+        content="", tool_calls=[{"name": tool_name, "args": {}, "id": "call_1"}]
+    )
+
+
+def test_date_node_answers_with_given_today() -> None:
+    node = DateNode(today=lambda: date(2026, 11, 21))
+
+    result = only_message(node(state_with(date_request())))
+
+    assert isinstance(result, ToolMessage)
+    assert result.tool_call_id == "call_1"
+    assert result.artifact == {"date": "2026-11-21"}
+    assert result.text == "2026-11-21"
+
+
+def test_date_node_fails_on_other_tools() -> None:
+    node = DateNode(today=lambda: date(2026, 11, 21))
+
+    with pytest.raises(ValueError, match=DATE_NODE):
+        node(state_with(date_request("send_email")))

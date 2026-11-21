@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from datetime import date
+
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -5,16 +8,19 @@ from langgraph.types import RetryPolicy
 
 from mini_agent import messages
 from mini_agent.nodes import (
+    DATE_NODE,
+    DATE_TOOL_NAME,
     ERROR_GUIDE_NODE,
     LLM_NODE,
     SEARCH_NODE,
     AgentState,
+    DateNode,
     LLMNode,
     RagSearchNode,
     error_guide,
     llm_error_handler,
-    search_error_handler,
     tool_calls_of,
+    tool_error_handler,
 )
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
@@ -29,15 +35,16 @@ LLM_RETRY_POLICY = RetryPolicy(
 )
 
 # 도구 이름 → 그 도구를 실행하는 노드. 도구를 추가하면 노드를 만들고 여기에 한 줄을 더한다.
-TOOL_NODES = {SEARCH_TOOL_NAME: SEARCH_NODE}
+TOOL_NODES = {SEARCH_TOOL_NAME: SEARCH_NODE, DATE_TOOL_NAME: DATE_NODE}
 
 
 def build_graph(
     model: BaseChatModel,
     search: DocumentSearch,
     llm_retry: RetryPolicy = LLM_RETRY_POLICY,
+    today: Callable[[], date] = date.today,
 ) -> CompiledStateGraph:
-    """시연 그래프. LLM이 검색을 요청하면 검색 노드를 거쳐 다시 LLM으로 돌아온다."""
+    """시연 그래프. LLM이 도구를 요청하면 그 도구의 노드를 거쳐 다시 LLM으로 돌아온다."""
     builder = StateGraph(AgentState)  # ty: ignore[invalid-argument-type]
     # 오류 처리기의 (state, NodeError) 모양이 LangGraph의 타입 정의에 빠져 있어 ty가 거부한다.
     builder.add_node(
@@ -49,7 +56,12 @@ def build_graph(
     builder.add_node(
         SEARCH_NODE,
         RagSearchNode(search),
-        error_handler=search_error_handler,  # ty: ignore[invalid-argument-type]
+        error_handler=tool_error_handler,  # ty: ignore[invalid-argument-type]
+    )
+    builder.add_node(
+        DATE_NODE,
+        DateNode(today),
+        error_handler=tool_error_handler,  # ty: ignore[invalid-argument-type]
     )
     builder.add_node(ERROR_GUIDE_NODE, error_guide)
 
@@ -58,6 +70,7 @@ def build_graph(
         LLM_NODE, route_after_llm, [*TOOL_NODES.values(), END]
     )
     builder.add_edge(SEARCH_NODE, LLM_NODE)
+    builder.add_edge(DATE_NODE, LLM_NODE)
     builder.add_edge(ERROR_GUIDE_NODE, END)
     return builder.compile()
 

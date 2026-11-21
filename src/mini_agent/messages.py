@@ -40,13 +40,6 @@ def llm_timeout(question: str) -> str:
 COLLECTION_LABELS = {"current": "현행", "archive": "보관"}
 
 
-def search_result_text(collection: str, titles: list[str]) -> str:
-    label = COLLECTION_LABELS[collection]
-    if not titles:
-        return f"{label} 문서에서 관련 문서를 찾지 못했습니다."
-    return f"{label} 문서에서 {len(titles)}건을 찾았습니다: {', '.join(titles)}"
-
-
 def unsupported_tool(node: str, tool_name: str) -> str:
     return f"{node} 노드가 처리하지 않는 도구입니다: {tool_name}"
 
@@ -63,3 +56,8 @@ def error_guide(node: str, reason: str, attempts: int) -> str:
     return (
         f"{node} 노드가 {attempts}번 시도 끝에 실패해 답변하지 못했습니다. ({reason})"
     )
+
+
+def date_answer(today: str) -> str:
+    year, month, day = today.split("-")
+    return f"오늘은 {int(year)}년 {int(month)}월 {int(day)}일입니다."

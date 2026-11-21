@@ -1,3 +1,5 @@
+from collections.abc import Callable
+from datetime import date
 from typing import NotRequired, TypedDict
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -17,7 +19,10 @@ from mini_agent.search import (
 
 LLM_NODE = "llm"
 SEARCH_NODE = "search"
+DATE_NODE = "date"
 ERROR_GUIDE_NODE = "error_guide"
+
+DATE_TOOL_NAME = "get_today"
 
 type MessagesUpdate = dict[str, list[BaseMessage]]
 
@@ -75,11 +80,36 @@ class RagSearchNode:
                 for hit in hits
             ],
         }
-        titles = [hit.document.title for hit in hits]
+        # 도구는 문장을 만들지 않고 데이터만 돌려준다. 문장으로 답하는 것은 LLM의 일이다.
+        titles = ", ".join(doc["title"] for doc in artifact["documents"])
+        count = len(artifact["documents"])
         return ToolMessage(
-            content=messages.search_result_text(collection, titles),
+            content=f"collection={collection}, count={count}, titles=[{titles}]",
             tool_call_id=call["id"],
             artifact=artifact,
+        )
+
+
+class DateNode:
+    """LLM의 날짜 요청에 오늘 날짜를 결과 메시지로 돌려준다.
+
+    오늘 날짜는 바깥에서 받은 함수로 얻는다. 테스트는 고정된 날짜를 돌려주는 함수를 넣는다.
+    """
+
+    def __init__(self, today: Callable[[], date]) -> None:
+        self._today = today
+
+    def __call__(self, state: AgentState) -> MessagesUpdate:
+        return {"messages": [self._run(call) for call in tool_calls_of(state)]}
+
+    def _run(self, call: ToolCall) -> ToolMessage:
+        if call["name"] != DATE_TOOL_NAME:
+            raise ValueError(messages.unsupported_tool(DATE_NODE, call["name"]))
+        today = self._today().isoformat()
+        return ToolMessage(
+            content=today,
+            tool_call_id=call["id"],
+            artifact={"date": today},
         )
 
 
@@ -91,8 +121,11 @@ def error_guide(state: AgentState) -> MessagesUpdate:
     return {"messages": [AIMessage(guide)]}
 
 
-def search_error_handler(state: AgentState, error: NodeError) -> Command:
-    """검색 요청마다 실패 결과를 돌려준다. 도구 호출 요청에는 결과가 짝으로 있어야 한다."""
+def tool_error_handler(state: AgentState, error: NodeError) -> Command:
+    """도구 노드가 실패하면 도구 요청마다 실패 결과를 돌려주고 LLM 노드로 보낸다.
+
+    도구 호출 요청에는 결과가 짝으로 있어야 한다. 어느 도구 노드든 같은 처리기를 쓴다.
+    """
     reason = messages.error_reason(error.error)
     failures = [
         ToolMessage(content=reason, tool_call_id=call["id"], status="error")

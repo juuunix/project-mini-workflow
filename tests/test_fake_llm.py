@@ -3,6 +3,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMe
 
 from mini_agent import messages
 from mini_agent.fake_llm import FakeLLM
+from mini_agent.nodes import DATE_TOOL_NAME
 from mini_agent.search import SEARCH_TOOL_NAME, Collection, SearchArtifact
 
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
@@ -153,3 +154,24 @@ def test_same_messages_always_give_same_response() -> None:
     first, second = FakeLLM().invoke(history), FakeLLM().invoke(history)
 
     assert (first.content, first.tool_calls) == (second.content, second.tool_calls)
+
+
+def test_question_about_date_requests_date_tool() -> None:
+    response = FakeLLM().invoke([HumanMessage("오늘 날짜 알려줘")])
+
+    assert len(response.tool_calls) == 1
+    assert response.tool_calls[0]["name"] == DATE_TOOL_NAME
+
+
+def test_date_result_is_answered_with_the_date() -> None:
+    request = AIMessage(
+        content="", tool_calls=[{"name": DATE_TOOL_NAME, "args": {}, "id": "call_1"}]
+    )
+    result = ToolMessage(
+        content="", tool_call_id="call_1", artifact={"date": "2026-11-21"}
+    )
+
+    response = FakeLLM().invoke([HumanMessage("오늘 날짜 알려줘"), request, result])
+
+    assert response.tool_calls == []
+    assert "2026년 11월 21일" in response.text

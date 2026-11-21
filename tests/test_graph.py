@@ -5,7 +5,14 @@ from langgraph.graph import END
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph, route_after_llm
-from mini_agent.nodes import ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE, AgentState
+from mini_agent.nodes import (
+    DATE_NODE,
+    DATE_TOOL_NAME,
+    ERROR_GUIDE_NODE,
+    LLM_NODE,
+    SEARCH_NODE,
+    AgentState,
+)
 from mini_agent.report import table_rows
 from mini_agent.result import RecordKind, RunStatus
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
@@ -99,6 +106,12 @@ def test_route_sends_search_request_to_search_node() -> None:
     state: AgentState = {"messages": [tool_request(SEARCH_TOOL_NAME)]}
 
     assert route_after_llm(state) == SEARCH_NODE
+
+
+def test_route_sends_date_request_to_date_node() -> None:
+    state: AgentState = {"messages": [tool_request(DATE_TOOL_NAME)]}
+
+    assert route_after_llm(state) == DATE_NODE
 
 
 def test_route_ends_when_llm_answers_in_text() -> None:

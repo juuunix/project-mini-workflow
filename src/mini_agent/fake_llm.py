@@ -6,9 +6,11 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMe
 from langchain_core.outputs import ChatGeneration, ChatResult
 
 from mini_agent import messages
+from mini_agent.nodes import DATE_TOOL_NAME
 from mini_agent.search import SEARCH_TOOL_NAME, Collection, SearchArtifact
 
 SEARCH_KEYWORDS = ("검색해줘", "찾아줘")
+DATE_KEYWORDS = ("날짜",)
 
 
 class FakeLLM(BaseChatModel):
@@ -39,6 +41,8 @@ class FakeLLM(BaseChatModel):
         last = history[-1]
 
         if not isinstance(last, ToolMessage):
+            if any(keyword in question for keyword in DATE_KEYWORDS):
+                return tool_request(DATE_TOOL_NAME, {}, history)
             if any(keyword in question for keyword in SEARCH_KEYWORDS):
                 return search_request(question, Collection.CURRENT, history)
             return AIMessage(messages.DIRECT_ANSWER)
@@ -51,6 +55,8 @@ class FakeLLM(BaseChatModel):
         # 도구가 늘면 그 도구의 결과를 읽는 갈래를 여기에 더한다.
         if tool_name == SEARCH_TOOL_NAME:
             return answer_search_result(question, last, history)
+        if tool_name == DATE_TOOL_NAME:
+            return AIMessage(messages.date_answer(last.artifact["date"]))
         raise ValueError(messages.unknown_tool(tool_name))
 
 
@@ -87,15 +93,16 @@ def requested_tool(history: list[BaseMessage], tool_call_id: str) -> str:
 def search_request(
     question: str, collection: Collection, history: list[BaseMessage]
 ) -> AIMessage:
+    args = {"query": question, "collection": collection}
+    return tool_request(SEARCH_TOOL_NAME, args, history)
+
+
+def tool_request(
+    tool_name: str, args: dict[str, object], history: list[BaseMessage]
+) -> AIMessage:
     # 같은 메시지 목록에는 같은 응답을 내도록, 호출 ID를 지금까지의 LLM 응답 수로 정한다.
     call_number = sum(isinstance(m, AIMessage) for m in history) + 1
     return AIMessage(
         content="",
-        tool_calls=[
-            {
-                "name": SEARCH_TOOL_NAME,
-                "args": {"query": question, "collection": collection},
-                "id": f"call_{call_number}",
-            }
-        ],
+        tool_calls=[{"name": tool_name, "args": args, "id": f"call_{call_number}"}],
     )

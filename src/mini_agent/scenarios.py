@@ -5,7 +5,7 @@ from mini_agent.nodes import LLM_NODE, SEARCH_NODE
 TIMEOUT_QUESTION = "재택근무 운영 지침 찾아줘"
 
 DEMO_QUESTIONS = [
-    "안녕하세요",
+    "오늘 날짜 알려줘",
     "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘",
     "웰니스 포인트는 어디에 쓸 수 있는지 검색해줘",
     "사내 동호회 가입 방법 찾아줘",
