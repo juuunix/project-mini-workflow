@@ -43,9 +43,9 @@ def test_table_rows_show_moves_and_counts(search: DocumentSearch) -> None:
     rows = table_rows(result)
 
     assert [row[:5] for row in rows] == [
-        ("1", "START → llm", "성공", LLM_NODE, "1"),
-        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1"),
-        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "성공", LLM_NODE, "2"),
+        ("1", "START → llm", "성공", LLM_NODE, "1번째"),
+        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1번째"),
+        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "성공", LLM_NODE, "2번째"),
         ("4", f"{LLM_NODE} → END", "종료", "", ""),
     ]
 
@@ -59,11 +59,11 @@ def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
     rows = table_rows(result)
 
     assert [row[:5] for row in rows] == [
-        ("1", "START → llm", "성공", LLM_NODE, "1"),
-        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1"),
-        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "실패", LLM_NODE, "2"),
+        ("1", "START → llm", "성공", LLM_NODE, "1번째"),
+        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1번째"),
+        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "실패", LLM_NODE, "2번째"),
         ("4", f"{LLM_NODE} → 오류 처리", "오류 처리", LLM_NODE, ""),
-        ("5", f"오류 처리 → {ERROR_GUIDE_NODE}", "성공", ERROR_GUIDE_NODE, "1"),
+        ("5", f"오류 처리 → {ERROR_GUIDE_NODE}", "성공", ERROR_GUIDE_NODE, "1번째"),
         ("6", f"{ERROR_GUIDE_NODE} → END", "종료", "", ""),
     ]
     assert rows[2][5].startswith("TimeoutError")

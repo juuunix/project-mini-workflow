@@ -29,7 +29,7 @@ STATUS_STYLES = {
     STOPPED: "bold red",
     FINISHED: "dim",
 }
-# 표의 한 줄: 번호, 이동, 상태, 노드, 회차, 출력
+# 표의 한 줄: 번호, 이동, 상태, 노드, 실행(그 노드의 몇 번째 실행인지), 출력
 type Row = tuple[str, str, str, str, str, str]
 STOP_KIND_LABELS = {
     "node_failure": "노드 실패",
@@ -53,7 +53,7 @@ def run_report(result: RunResult) -> RenderableType:
 
 def step_table(result: RunResult) -> Table:
     table = Table(box=box.SQUARE)
-    for column in ["#", "이동", "상태", "노드", "회차"]:
+    for column in ["#", "이동", "상태", "노드", "실행"]:
         table.add_column(column, no_wrap=True)
     table.add_column("출력")
     for number, move, status, node, count, output in table_rows(result):
@@ -93,7 +93,7 @@ def step_rows(history: list[ExecutionRecord]) -> tuple[list[Row], str]:
         counts[record.node] += 1
         status = "성공" if record.succeeded else "실패"
         move = f"{previous} → {record.node}"
-        count = str(counts[record.node])
+        count = f"{counts[record.node]}번째"
         rows.append((str(number), move, status, record.node, count, output))
         previous = record.node
     return rows, previous
