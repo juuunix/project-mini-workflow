@@ -4,6 +4,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, ToolCall, ToolMessage
 from langgraph.errors import NodeError
 from langgraph.graph import MessagesState
+from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from mini_agent import messages
@@ -22,9 +23,14 @@ ERROR_GUIDE_NODE = "error_guide"
 type MessagesUpdate = dict[str, list[BaseMessage]]
 
 
+# 실패한 노드가 상태에 쓴 값은 버려지므로, 시도 횟수는 예외의 속성으로 오류 처리기에 전한다.
+ATTEMPT_ATTRIBUTE = "node_attempt"
+
+
 class Failure(TypedDict):
     node: str
     reason: str
+    attempts: int
 
 
 class AgentState(MessagesState):
@@ -35,8 +41,14 @@ class LLMNode:
     def __init__(self, model: BaseChatModel) -> None:
         self._model = model
 
-    def __call__(self, state: AgentState) -> MessagesUpdate:
-        return {"messages": [self._model.invoke(state["messages"])]}
+    def __call__(self, state: AgentState, runtime: Runtime) -> MessagesUpdate:
+        try:
+            response = self._model.invoke(state["messages"])
+        except Exception as error:
+            info = runtime.execution_info
+            record_attempt(error, info.node_attempt if info else 1)
+            raise
+        return {"messages": [response]}
 
 
 class RagSearchNode:
@@ -74,7 +86,9 @@ class RagSearchNode:
 
 def error_guide(state: AgentState) -> MessagesUpdate:
     failure = state["failure"]
-    guide = messages.error_guide(failure["node"], failure["reason"])
+    guide = messages.error_guide(
+        failure["node"], failure["reason"], failure["attempts"]
+    )
     return {"messages": [AIMessage(guide)]}
 
 
@@ -89,8 +103,20 @@ def search_error_handler(state: AgentState, error: NodeError) -> Command:
 
 
 def llm_error_handler(state: AgentState, error: NodeError) -> Command:
-    failure: Failure = {"node": error.node, "reason": describe_error(error.error)}
+    failure: Failure = {
+        "node": error.node,
+        "reason": describe_error(error.error),
+        "attempts": attempts_of(error.error),
+    }
     return Command(update={"failure": failure}, goto=ERROR_GUIDE_NODE)
+
+
+def record_attempt(error: BaseException, attempt: int) -> None:
+    setattr(error, ATTEMPT_ATTRIBUTE, attempt)
+
+
+def attempts_of(error: BaseException) -> int:
+    return getattr(error, ATTEMPT_ATTRIBUTE, 1)
 
 
 def tool_calls_of(state: AgentState) -> list[ToolCall]:

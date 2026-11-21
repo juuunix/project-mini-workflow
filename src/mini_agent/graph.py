@@ -2,6 +2,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import RetryPolicy
 
 from mini_agent import messages
 from mini_agent.nodes import (
@@ -17,17 +18,32 @@ from mini_agent.nodes import (
 )
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
+# LLM 호출의 시간 초과와 연결 오류는 일시적이라고 보고, 1초부터 2배씩 기다리며 3번까지 시도한다.
+# LangGraph의 기본 설정은 TimeoutError를 재시도하지 않아 재시도할 예외를 직접 지정한다.
+LLM_RETRY_POLICY = RetryPolicy(
+    max_attempts=3,
+    initial_interval=1.0,
+    backoff_factor=2.0,
+    jitter=False,
+    retry_on=(TimeoutError, ConnectionError),
+)
+
 # 도구 이름 → 그 도구를 실행하는 노드. 도구를 추가하면 노드를 만들고 여기에 한 줄을 더한다.
 TOOL_NODES = {SEARCH_TOOL_NAME: SEARCH_NODE}
 
 
-def build_graph(model: BaseChatModel, search: DocumentSearch) -> CompiledStateGraph:
+def build_graph(
+    model: BaseChatModel,
+    search: DocumentSearch,
+    llm_retry: RetryPolicy = LLM_RETRY_POLICY,
+) -> CompiledStateGraph:
     """시연 그래프. LLM이 검색을 요청하면 검색 노드를 거쳐 다시 LLM으로 돌아온다."""
     builder = StateGraph(AgentState)  # ty: ignore[invalid-argument-type]
     # 오류 처리기의 (state, NodeError) 모양이 LangGraph의 타입 정의에 빠져 있어 ty가 거부한다.
     builder.add_node(
         LLM_NODE,
         LLMNode(model),
+        retry_policy=llm_retry,
         error_handler=llm_error_handler,  # ty: ignore[invalid-argument-type]
     )
     builder.add_node(

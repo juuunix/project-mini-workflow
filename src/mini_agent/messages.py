@@ -55,8 +55,10 @@ def no_documents(collection: str) -> str:
     return f"{COLLECTION_LABELS[collection]}({collection}) 문서가 하나도 없습니다."
 
 
-def error_guide(node: str, reason: str) -> str:
-    return f"{node} 노드가 실패해 답변하지 못했습니다. ({reason})"
+def error_guide(node: str, reason: str, attempts: int) -> str:
+    return (
+        f"{node} 노드가 {attempts}번 시도 끝에 실패해 답변하지 못했습니다. ({reason})"
+    )
 
 
 ERROR_HANDLER_LABEL = "오류 처리"

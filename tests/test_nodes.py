@@ -9,6 +9,7 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langgraph.errors import NodeError
+from langgraph.runtime import ExecutionInfo, Runtime
 
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.nodes import (
@@ -18,8 +19,10 @@ from mini_agent.nodes import (
     AgentState,
     LLMNode,
     RagSearchNode,
+    attempts_of,
     error_guide,
     llm_error_handler,
+    record_attempt,
     search_error_handler,
 )
 from mini_agent.search import SEARCH_TOOL_NAME, Collection, DocumentSearch, SearchHit
@@ -58,12 +61,34 @@ class BrokenSearch(DocumentSearch):
         raise FileNotFoundError("data/docs")
 
 
+def runtime_at_attempt(attempt: int) -> Runtime:
+    info = ExecutionInfo(
+        checkpoint_id="", checkpoint_ns="", task_id="", node_attempt=attempt
+    )
+    return Runtime(execution_info=info)
+
+
 def test_llm_node_appends_model_response() -> None:
-    update = LLMNode(FakeLLM())(state_with())
+    update = LLMNode(FakeLLM())(state_with(), Runtime())
 
     response = only_message(update)
     assert isinstance(response, AIMessage)
     assert response.tool_calls[0]["args"]["collection"] == Collection.CURRENT
+
+
+def test_llm_node_failure_carries_attempt_number() -> None:
+    llm = FakeLLM(timeout_questions=frozenset({LEAVE_QUESTION}))
+    found = ToolMessage(
+        content="",
+        tool_call_id="call_1",
+        artifact={"collection": "current", "documents": []},
+    )
+    state = state_with(search_request("current"), found)
+
+    with pytest.raises(TimeoutError) as raised:
+        LLMNode(llm)(state, runtime_at_attempt(3))
+
+    assert attempts_of(raised.value) == 3
 
 
 def test_search_node_answers_request_with_found_documents(
@@ -115,22 +140,32 @@ def test_search_error_handler_returns_failure_as_tool_result() -> None:
 
 
 def test_llm_error_handler_records_failure_and_goes_to_error_guide() -> None:
-    failure = NodeError(node=LLM_NODE, error=TimeoutError("LLM 응답 시간 초과"))
+    error = TimeoutError("LLM 응답 시간 초과")
+    record_attempt(error, 3)
 
-    command = llm_error_handler(state_with(), failure)
+    command = llm_error_handler(state_with(), NodeError(node=LLM_NODE, error=error))
 
     assert command.goto == ERROR_GUIDE_NODE
     assert command.update == {
-        "failure": {"node": LLM_NODE, "reason": "TimeoutError: LLM 응답 시간 초과"}
+        "failure": {
+            "node": LLM_NODE,
+            "reason": "TimeoutError: LLM 응답 시간 초과",
+            "attempts": 3,
+        }
     }
 
 
 def test_error_guide_reports_failed_node_and_reason() -> None:
     state = state_with()
-    state["failure"] = {"node": LLM_NODE, "reason": "TimeoutError: 시간 초과"}
+    state["failure"] = {
+        "node": LLM_NODE,
+        "reason": "TimeoutError: 시간 초과",
+        "attempts": 3,
+    }
 
     guide = only_message(error_guide(state))
 
     assert isinstance(guide, AIMessage)
     assert LLM_NODE in guide.text
     assert "TimeoutError: 시간 초과" in guide.text
+    assert "3번 시도" in guide.text

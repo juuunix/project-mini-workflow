@@ -4,10 +4,10 @@ from langgraph.graph import END
 
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import build_graph, route_after_llm
-from mini_agent.nodes import LLM_NODE, SEARCH_NODE, AgentState
+from mini_agent.graph import LLM_RETRY_POLICY, build_graph, route_after_llm
+from mini_agent.nodes import ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE, AgentState
 from mini_agent.report import format_result
-from mini_agent.result import RunStatus
+from mini_agent.result import RecordKind, RunStatus
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
@@ -41,6 +41,32 @@ def test_report_shows_each_node_in_order(search: DocumentSearch) -> None:
         f"[성공] {LLM_NODE}",
         "결과: 성공",
     ]
+
+
+def test_llm_timeout_is_retried_then_guided(search: DocumentSearch) -> None:
+    llm = FakeLLM(timeout_questions=frozenset({LEAVE_QUESTION}))
+    no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
+    graph = build_graph(llm, search, llm_retry=no_wait)
+
+    result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
+
+    assert [(record.kind, record.node) for record in result.history] == [
+        (RecordKind.NODE, LLM_NODE),
+        (RecordKind.NODE, SEARCH_NODE),
+        (RecordKind.NODE, LLM_NODE),
+        (RecordKind.ERROR_HANDLER, LLM_NODE),
+        (RecordKind.NODE, ERROR_GUIDE_NODE),
+    ]
+    assert not result.history[2].succeeded
+    assert result.status is RunStatus.SUCCESS
+    assert result.state["failure"]["attempts"] == LLM_RETRY_POLICY.max_attempts
+
+
+def test_llm_retry_policy_matches_architecture() -> None:
+    assert LLM_RETRY_POLICY.max_attempts == 3
+    assert LLM_RETRY_POLICY.initial_interval == 1.0
+    assert LLM_RETRY_POLICY.backoff_factor == 2.0
+    assert LLM_RETRY_POLICY.retry_on == (TimeoutError, ConnectionError)
 
 
 def tool_request(tool_name: str) -> AIMessage:
