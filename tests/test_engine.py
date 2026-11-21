@@ -97,6 +97,21 @@ def test_node_failure_with_handler_records_handling_and_succeeds() -> None:
     assert result.state == {"path": ["A", "RECOVER"]}
 
 
+def test_endless_loop_stops_with_step_limit_exceeded() -> None:
+    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
+    builder.add_node("L", AppendName("L"))
+    builder.add_edge(START, "L")
+    builder.add_edge("L", "L")
+
+    result = run_graph(builder.compile(), {"path": []}, recursion_limit=5)
+
+    assert result.status is RunStatus.FAILURE
+    assert result.stop_reason is not None
+    assert result.stop_reason.kind is StopKind.STEP_LIMIT_EXCEEDED
+    assert result.stop_reason.node == "L"
+    assert [record.node for record in result.history] == ["L"] * 5
+
+
 def test_error_outside_nodes_is_not_reported_as_node_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

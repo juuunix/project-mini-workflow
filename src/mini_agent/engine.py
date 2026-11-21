@@ -1,7 +1,9 @@
 from typing import Any
 
+from langgraph.errors import GraphRecursionError
 from langgraph.graph.state import CompiledStateGraph
 
+from mini_agent import messages
 from mini_agent.result import (
     ExecutionRecord,
     RecordKind,
@@ -14,7 +16,14 @@ from mini_agent.result import (
 ERROR_HANDLER_PREFIX = "__error_handler__"
 
 
-def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunResult:
+DEFAULT_RECURSION_LIMIT = 20
+
+
+def run_graph(
+    graph: CompiledStateGraph,
+    initial_state: dict[str, Any],
+    recursion_limit: int = DEFAULT_RECURSION_LIMIT,
+) -> RunResult:
     history: list[ExecutionRecord] = []
     state: dict[str, Any] = initial_state
     failed_node: str | None = None
@@ -22,7 +31,10 @@ def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunRe
 
     try:
         for part in graph.stream(
-            initial_state, stream_mode=["tasks", "values"], version="v2"
+            initial_state,
+            {"recursion_limit": recursion_limit},
+            stream_mode=["tasks", "values"],
+            version="v2",
         ):
             if part["type"] == "values":
                 state = part["data"]
@@ -44,6 +56,13 @@ def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunRe
                         error=None if error is None else describe_error(error),
                     )
                 )
+    except GraphRecursionError:
+        stop_reason = StopReason(
+            kind=StopKind.STEP_LIMIT_EXCEEDED,
+            node=history[-1].node if history else "",
+            detail=messages.step_limit_detail(recursion_limit),
+        )
+        return RunResult(history=history, state=state, stop_reason=stop_reason)
     except Exception as caught:
         if failed_node is None or caught is not node_error:
             raise
