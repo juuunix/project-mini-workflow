@@ -1,5 +1,4 @@
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import RetryPolicy
@@ -15,6 +14,7 @@ from mini_agent.nodes import (
     error_guide,
     llm_error_handler,
     search_error_handler,
+    tool_calls_of,
 )
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
@@ -68,10 +68,10 @@ def route_after_llm(state: AgentState) -> str:
     한 응답의 도구 요청은 모두 같은 도구라고 보고 첫 요청의 도구로 노드를 정한다.
     서로 다른 도구를 한 번에 요청하면 병렬 실행이 필요해 이 그래프의 범위 밖이다.
     """
-    last = state["messages"][-1]
-    if not isinstance(last, AIMessage) or not last.tool_calls:
+    calls = tool_calls_of(state)
+    if not calls:
         return END
-    tool_name = last.tool_calls[0]["name"]
+    tool_name = calls[0]["name"]
     if tool_name not in TOOL_NODES:
         raise ValueError(messages.no_node_for_tool(tool_name))
     return TOOL_NODES[tool_name]

@@ -8,7 +8,6 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from mini_agent import messages
-from mini_agent.engine import describe_error
 from mini_agent.search import (
     SEARCH_TOOL_NAME,
     Collection,
@@ -94,7 +93,7 @@ def error_guide(state: AgentState) -> MessagesUpdate:
 
 def search_error_handler(state: AgentState, error: NodeError) -> Command:
     """검색 요청마다 실패 결과를 돌려준다. 도구 호출 요청에는 결과가 짝으로 있어야 한다."""
-    reason = describe_error(error.error)
+    reason = messages.error_reason(error.error)
     failures = [
         ToolMessage(content=reason, tool_call_id=call["id"], status="error")
         for call in tool_calls_of(state)
@@ -105,7 +104,7 @@ def search_error_handler(state: AgentState, error: NodeError) -> Command:
 def llm_error_handler(state: AgentState, error: NodeError) -> Command:
     failure: Failure = {
         "node": error.node,
-        "reason": describe_error(error.error),
+        "reason": messages.error_reason(error.error),
         "attempts": attempts_of(error.error),
     }
     return Command(update={"failure": failure}, goto=ERROR_GUIDE_NODE)

@@ -1,3 +1,7 @@
+def error_reason(error: BaseException) -> str:
+    return f"{type(error).__name__}: {error}"
+
+
 def step_limit_detail(limit: int) -> str:
     return f"상한 {limit}단계"
 

@@ -103,5 +103,5 @@ def to_record(event: TaskResultPayload) -> ExecutionRecord:
 def describe_error(error: BaseException | str) -> str:
     """LangGraph는 종료 이벤트의 error를 문자열로 선언하지만 실제로는 예외 객체를 넣는다."""
     if isinstance(error, BaseException):
-        return f"{type(error).__name__}: {error}"
+        return messages.error_reason(error)
     return error
