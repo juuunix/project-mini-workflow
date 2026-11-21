@@ -7,6 +7,9 @@ dependencies = [
     "rank-bm25==0.2.2",
 ]
 
+[project.scripts]
+mini-agent-demo = "mini_agent.demo:main"
+
 [tool.ruff]
 target-version = "py313"
 line-length = 88 # 포맷 시 사용하는 목표 줄 길이

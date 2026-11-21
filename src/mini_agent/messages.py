@@ -74,3 +74,7 @@ def record_label(succeeded: bool) -> str:
 
 def result_line(status: str) -> str:
     return f"결과: {'성공' if status == 'success' else '실패'}"
+
+
+def question_line(question: str) -> str:
+    return f"질문: {question}"
