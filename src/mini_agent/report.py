@@ -14,6 +14,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from mini_agent import messages
 from mini_agent.result import ExecutionRecord, RecordKind, RunResult
 
 START = "START"
@@ -21,6 +22,7 @@ END = "END"
 ERROR_HANDLING = "오류 처리"
 STOPPED = "중단"
 FINISHED = "종료"
+NOT_RUN = "실행하지 못함"
 # 색은 상태 글자를 강조하는 데만 쓴다. 색이 없는 환경에서도 글자로 구분된다.
 STATUS_STYLES = {
     "성공": "green",
@@ -43,12 +45,22 @@ def run_report(result: RunResult) -> RenderableType:
     parts: list[RenderableType] = []
     question = first_question(result.state)
     if question is not None:
-        parts.append(
-            Panel(Text(question), title="질문", title_align="left", expand=False)
-        )
+        parts.append(question_panel(question))
     parts.append(step_table(result))
     parts.append(answer_panel(result))
     return Group(*parts)
+
+
+def not_run_report(question: str, error: Exception) -> RenderableType:
+    summary = Text()
+    summary.append(NOT_RUN, style="bold red")
+    summary.append(f" · {messages.error_reason(error)}")
+    result = Panel(summary, title="결과", title_align="left", expand=False)
+    return Group(question_panel(question), result)
+
+
+def question_panel(question: str) -> Panel:
+    return Panel(Text(question), title="질문", title_align="left", expand=False)
 
 
 def step_table(result: RunResult) -> Table:

@@ -3,6 +3,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from langchain_core.messages import HumanMessage
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import RetryPolicy
 from rich.console import Console
 from rich.text import Text
@@ -10,7 +11,8 @@ from rich.text import Text
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph
-from mini_agent.report import run_report
+from mini_agent.report import not_run_report, run_report
+from mini_agent.result import RunResult
 from mini_agent.scenarios import DEMO_NODE_LIMITS, DEMO_QUESTIONS, TIMEOUT_QUESTION
 from mini_agent.search import DocumentSearch
 
@@ -27,18 +29,27 @@ def run_demo(
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
     graph = build_graph(llm, DocumentSearch.from_directory(docs_dir), llm_retry)
 
-    results = [
-        run_graph(
+    results = [run_question(graph, question) for question in DEMO_QUESTIONS]
+    for number, (question, result) in enumerate(
+        zip(DEMO_QUESTIONS, results, strict=True), start=1
+    ):
+        console.rule(Text(f"[{number}/{len(results)}]"))
+        if isinstance(result, RunResult):
+            console.print(run_report(result))
+        else:
+            console.print(not_run_report(question, result))
+        console.print()
+
+
+def run_question(graph: CompiledStateGraph, question: str) -> RunResult | Exception:
+    try:
+        return run_graph(
             graph,
             {"messages": [HumanMessage(question)]},
             node_limits=DEMO_NODE_LIMITS,
         )
-        for question in DEMO_QUESTIONS
-    ]
-    for number, result in enumerate(results, start=1):
-        console.rule(Text(f"[{number}/{len(results)}]"))
-        console.print(run_report(result))
-        console.print()
+    except Exception as error:
+        return error
 
 
 def main(argv: Sequence[str] | None = None) -> None:

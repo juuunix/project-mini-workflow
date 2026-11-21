@@ -56,7 +56,9 @@ def test_question_without_search_keyword_is_answered_directly() -> None:
     response = FakeLLM().invoke([HumanMessage("안녕하세요")])
 
     assert response.tool_calls == []
-    assert response.content
+    # 안내에는 할 수 있는 일(날짜 조회, 문서 검색)을 모두 알려 준다.
+    assert "날짜" in response.text
+    assert "찾아줘" in response.text
 
 
 def test_documents_found_in_current_are_answered_with_passage_and_reference() -> None:
