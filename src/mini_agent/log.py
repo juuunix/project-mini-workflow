@@ -9,6 +9,7 @@ data 하나에 담는다. data에 무엇이 들어갈지는 이벤트가 정한�
 
 import json
 import logging
+import sys
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -16,6 +17,8 @@ from datetime import datetime
 from enum import StrEnum
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
+from mini_agent import messages
 
 LOG_FILE = Path("logs") / "mini-agent.log"
 # 파일이 1MB를 넘으면 예전 파일로 돌려 3개까지 남겨, 로그 전체가 4MB를 넘지 않게 한다.
@@ -94,11 +97,16 @@ class JsonLinesFormatter(logging.Formatter):
 
 @contextmanager
 def file_logging(path: Path = LOG_FILE) -> Generator[None]:
-    """with 블록 안의 mini_agent 로그를 파일에 남기고, 블록이 끝나면 파일을 닫는다."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    handler = RotatingFileHandler(
-        path, maxBytes=LOG_MAX_BYTES, backupCount=LOG_BACKUP_COUNT, encoding="utf-8"
-    )
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        handler = RotatingFileHandler(
+            path, maxBytes=LOG_MAX_BYTES, backupCount=LOG_BACKUP_COUNT, encoding="utf-8"
+        )
+    except OSError as error:
+        # 로그를 남길 수 없는 상황이라 logging이 아닌 화면(stderr)으로 알린다.
+        print(messages.log_file_unavailable(error), file=sys.stderr)
+        yield
+        return
     handler.setFormatter(JsonLinesFormatter())
     logger = logging.getLogger(PACKAGE_LOGGER)
     logger.setLevel(logging.INFO)
