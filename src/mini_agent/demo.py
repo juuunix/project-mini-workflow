@@ -1,4 +1,5 @@
 import argparse
+import logging
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -8,15 +9,19 @@ from langgraph.types import RetryPolicy
 from rich.console import Console
 from rich.text import Text
 
+from mini_agent import messages
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph
+from mini_agent.log import Event, file_logging, log_event, log_run
 from mini_agent.report import not_run_report, run_report
 from mini_agent.result import RunResult
 from mini_agent.scenarios import DEMO_NODE_LIMITS, DEMO_QUESTIONS, TIMEOUT_QUESTION
-from mini_agent.search import DocumentSearch
+from mini_agent.search import DocumentLoadError, DocumentSearch
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
+
+logger = logging.getLogger(__name__)
 
 
 def run_demo(
@@ -29,7 +34,10 @@ def run_demo(
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
     graph = build_graph(llm, DocumentSearch.from_directory(docs_dir), llm_retry)
 
-    results = [run_question(graph, question) for question in DEMO_QUESTIONS]
+    results = [
+        run_question(graph, number, question)
+        for number, question in enumerate(DEMO_QUESTIONS, start=1)
+    ]
     for number, (question, result) in enumerate(
         zip(DEMO_QUESTIONS, results, strict=True), start=1
     ):
@@ -41,15 +49,29 @@ def run_demo(
         console.print()
 
 
-def run_question(graph: CompiledStateGraph, question: str) -> RunResult | Exception:
-    try:
-        return run_graph(
-            graph,
-            {"messages": [HumanMessage(question)]},
-            node_limits=DEMO_NODE_LIMITS,
-        )
-    except Exception as error:
-        return error
+def run_question(
+    graph: CompiledStateGraph, number: int, question: str
+) -> RunResult | Exception:
+    with log_run(number):
+        log_event(logger, logging.INFO, Event.QUESTION_START, question=question)
+        try:
+            result = run_graph(
+                graph,
+                {"messages": [HumanMessage(question)]},
+                node_limits=DEMO_NODE_LIMITS,
+            )
+        except Exception as error:
+            log_event(
+                logger,
+                logging.ERROR,
+                Event.QUESTION_CRASHED,
+                exc_info=True,
+                question=question,
+                error=messages.error_reason(error),
+            )
+            return error
+        log_event(logger, logging.INFO, Event.QUESTION_END, status=result.status)
+        return result
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -61,7 +83,22 @@ def main(argv: Sequence[str] | None = None) -> None:
         help="current, archive 폴더가 있는 문서 디렉터리 (기본값: data/docs)",
     )
     args = parser.parse_args(argv)
-    run_demo(Console(), args.docs_dir, LLM_RETRY_POLICY)
+    console = Console()
+
+    with file_logging():
+        try:
+            run_demo(console, args.docs_dir, LLM_RETRY_POLICY)
+        except DocumentLoadError as error:
+            log_event(
+                logger,
+                logging.ERROR,
+                Event.DOCS_LOAD_FAILED,
+                exc_info=True,
+                docs_dir=args.docs_dir,
+                error=str(error),
+            )
+            console.print(Text(messages.demo_not_started(str(error))))
+            raise SystemExit(1) from error
 
 
 if __name__ == "__main__":

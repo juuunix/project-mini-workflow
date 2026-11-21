@@ -14,6 +14,10 @@ WORD_PATTERN = re.compile(r"[0-9A-Za-z가-힣]+")
 SEARCH_TOOL_NAME = "search_documents"
 
 
+class DocumentLoadError(ValueError):
+    """문서를 읽을 수 없을 때 던진다. 메시지에 어느 컬렉션이나 파일이 문제인지 적는다."""
+
+
 class Collection(StrEnum):
     CURRENT = "current"
     ARCHIVE = "archive"
@@ -98,7 +102,7 @@ class DocumentSearch:
         }
         for collection, docs in self._documents.items():
             if not docs:
-                raise ValueError(messages.no_documents(collection))
+                raise DocumentLoadError(messages.no_documents(collection))
         self._indexes = {
             collection: BM25Okapi([tokenize(doc.text) for doc in docs])
             for collection, docs in self._documents.items()
@@ -130,6 +134,11 @@ class DocumentSearch:
 
 
 def load_document(path: Path, collection: Collection) -> Document:
-    text = path.read_text(encoding="utf-8")
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as error:
+        raise DocumentLoadError(messages.not_utf8_document(path)) from error
+    if not text.strip():
+        raise DocumentLoadError(messages.empty_document(path))
     title = text.splitlines()[0].lstrip("# ")
     return Document(doc_id=path.stem, title=title, collection=collection, text=text)

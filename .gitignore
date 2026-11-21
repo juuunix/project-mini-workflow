@@ -22,3 +22,6 @@ venv/
 .coverage
 .coverage.*
 htmlcov/
+
+# 시연 로그
+logs/

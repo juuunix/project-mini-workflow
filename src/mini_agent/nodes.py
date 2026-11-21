@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from datetime import date
 from typing import NotRequired, Protocol, TypedDict
@@ -10,6 +11,7 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from mini_agent import messages
+from mini_agent.log import Event, log_event
 from mini_agent.search import (
     SEARCH_TOOL_NAME,
     Collection,
@@ -24,6 +26,8 @@ DATE_NODE = "date"
 ERROR_GUIDE_NODE = "error_guide"
 
 DATE_TOOL_NAME = "get_today"
+
+logger = logging.getLogger(__name__)
 
 type MessagesUpdate = dict[str, list[BaseMessage]]
 
@@ -57,7 +61,16 @@ class LLMNode:
             response = self._model.invoke(state["messages"])
         except Exception as error:
             info = runtime.execution_info
-            record_attempt(error, info.node_attempt if info else 1)
+            attempt = info.node_attempt if info else 1
+            record_attempt(error, attempt)
+            # 재시도는 노드 안에서 일어나 엔진이 보지 못하므로, 시도마다 여기서 남긴다.
+            log_event(
+                logger,
+                logging.WARNING,
+                Event.LLM_ATTEMPT_FAILED,
+                attempt=attempt,
+                error=messages.error_reason(error),
+            )
             raise
         return {"messages": [response]}
 

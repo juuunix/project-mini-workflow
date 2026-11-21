@@ -1,3 +1,5 @@
+import logging
+import traceback
 from collections import Counter
 from collections.abc import Mapping
 from typing import Any
@@ -7,6 +9,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import TaskResultPayload
 
 from mini_agent import messages
+from mini_agent.log import Event, log_event
 from mini_agent.result import (
     ExecutionRecord,
     RecordKind,
@@ -20,6 +23,8 @@ ERROR_HANDLER_PREFIX = "__error_handler__"
 
 
 DEFAULT_RECURSION_LIMIT = 20
+
+logger = logging.getLogger(__name__)
 
 
 def run_graph(
@@ -58,21 +63,29 @@ def run_graph(
                             node=name,
                             detail=messages.node_limit_detail(limit),
                         )
-                        return RunResult(
-                            history=history, state=state, stop_reason=stop_reason
-                        )
+                        return stopped(history, state, stop_reason)
+                    log_event(
+                        logger,
+                        logging.INFO,
+                        Event.NODE_START,
+                        node=name,
+                        node_run=run_counts[name],
+                    )
                 else:
                     if event["error"] is not None:
                         failed_node, node_error = event["name"], event["error"]
-                    history.append(to_record(event))
+                    record = to_record(event)
+                    log_record(record, event["error"])
+                    history.append(record)
     except GraphRecursionError:
         stop_reason = StopReason(
             kind=StopKind.STEP_LIMIT_EXCEEDED,
             node=history[-1].node if history else "",
             detail=messages.step_limit_detail(recursion_limit),
         )
-        return RunResult(history=history, state=state, stop_reason=stop_reason)
+        return stopped(history, state, stop_reason)
     except Exception as caught:
+        # 노드 밖에서 발생한 오류는 기록하지 않고 다시 던진다. 받는 쪽이 traceback과 함께 기록한다.
         if failed_node is None or caught is not node_error:
             raise
         stop_reason = StopReason(
@@ -80,9 +93,51 @@ def run_graph(
             node=failed_node,
             detail=describe_error(caught),
         )
-        return RunResult(history=history, state=state, stop_reason=stop_reason)
+        return stopped(history, state, stop_reason)
 
+    log_event(logger, logging.INFO, Event.RUN_FINISHED, steps=len(history))
     return RunResult(history=history, state=state)
+
+
+def stopped(
+    history: list[ExecutionRecord], state: dict[str, Any], stop_reason: StopReason
+) -> RunResult:
+    log_event(
+        logger,
+        logging.WARNING,
+        Event.RUN_STOPPED,
+        kind=stop_reason.kind,
+        node=stop_reason.node,
+        detail=stop_reason.detail,
+    )
+    return RunResult(history=history, state=state, stop_reason=stop_reason)
+
+
+def log_record(record: ExecutionRecord, error: BaseException | str | None) -> None:
+    """실행 기록 하나를 로그로 남긴다. 실패는 오류 처리기의 실패까지 같은 이벤트로 남긴다."""
+    if record.error is not None:
+        # 예상하지 못한 버그도 위치를 찾을 수 있도록 traceback을 함께 남긴다.
+        log_event(
+            logger,
+            logging.WARNING,
+            Event.NODE_FAILED,
+            node=record.node,
+            error=record.error,
+            traceback=traceback_of(error),
+        )
+        return
+    # 노드의 입력은 앞 노드들의 출력이 쌓인 것이라, 출력만 원본 그대로 남긴다.
+    if record.kind is RecordKind.ERROR_HANDLER:
+        event = Event.ERROR_HANDLED
+    else:
+        event = Event.NODE_END
+    log_event(logger, logging.INFO, event, node=record.node, output=record.output)
+
+
+def traceback_of(error: BaseException | str | None) -> str | None:
+    if isinstance(error, BaseException):
+        return "".join(traceback.format_exception(error))
+    return None
 
 
 def to_record(event: TaskResultPayload) -> ExecutionRecord:

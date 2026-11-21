@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.search import Collection, DocumentSearch, best_passage, tokenize
+from mini_agent.search import (
+    Collection,
+    DocumentLoadError,
+    DocumentSearch,
+    best_passage,
+    tokenize,
+)
 
 LEAVE_QUERY = "연차휴가 이월은 최대 며칠까지 가능한가요?"
 WELLNESS_QUERY = "웰니스 포인트는 어디에 쓸 수 있나요?"
@@ -50,7 +56,23 @@ def test_retired_topic_is_found_in_archive(search: DocumentSearch) -> None:
 
 
 def test_search_without_documents_is_rejected(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match="current"):
+    with pytest.raises(DocumentLoadError, match="current"):
+        DocumentSearch.from_directory(tmp_path)
+
+
+def test_empty_document_is_rejected_with_its_path(tmp_path: Path) -> None:
+    (tmp_path / "current").mkdir()
+    (tmp_path / "current" / "empty.md").write_text("", encoding="utf-8")
+
+    with pytest.raises(DocumentLoadError, match="empty.md"):
+        DocumentSearch.from_directory(tmp_path)
+
+
+def test_non_utf8_document_is_rejected_with_its_path(tmp_path: Path) -> None:
+    (tmp_path / "current").mkdir()
+    (tmp_path / "current" / "cp949.md").write_bytes("# 연차휴가".encode("cp949"))
+
+    with pytest.raises(DocumentLoadError, match="cp949.md"):
         DocumentSearch.from_directory(tmp_path)
 
 

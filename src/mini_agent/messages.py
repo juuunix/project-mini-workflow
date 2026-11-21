@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 def error_reason(error: BaseException) -> str:
     return f"{type(error).__name__}: {error}"
 
@@ -51,6 +54,18 @@ def no_node_for_tool(tool_name: str) -> str:
 
 def no_documents(collection: str) -> str:
     return f"{COLLECTION_LABELS[collection]}({collection}) 문서가 하나도 없습니다."
+
+
+def empty_document(path: Path) -> str:
+    return f"빈 문서입니다: {path}"
+
+
+def not_utf8_document(path: Path) -> str:
+    return f"UTF-8로 읽을 수 없는 문서입니다: {path}"
+
+
+def demo_not_started(reason: str) -> str:
+    return f"문서를 읽지 못해 시연을 시작할 수 없습니다: {reason}"
 
 
 def error_guide(node: str, reason: str, attempts: int) -> str:
