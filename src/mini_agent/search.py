@@ -1,5 +1,5 @@
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -39,8 +39,24 @@ def tokenize(text: str) -> list[str]:
     return tokens
 
 
+# 점수 순으로 정렬된 검색 결과에서 관련 문서만 골라낸다. 순서는 바꾸지 않는다.
+type Judge = Callable[[list[str], list[SearchHit]], list[SearchHit]]
+
+
+def title_match(query_tokens: list[str], hits: list[SearchHit]) -> list[SearchHit]:
+    """BM25 점수가 0보다 크고, 질의의 토큰이 제목에도 있는 문서만 남긴다."""
+    query = set(query_tokens)
+    return [
+        hit
+        for hit in hits
+        if hit.score > 0 and query & set(tokenize(hit.document.title))
+    ]
+
+
 class DocumentSearch:
-    def __init__(self, documents: Sequence[Document]) -> None:
+    def __init__(
+        self, documents: Sequence[Document], judge: Judge = title_match
+    ) -> None:
         self._documents = {
             collection: [doc for doc in documents if doc.collection is collection]
             for collection in Collection
@@ -49,6 +65,7 @@ class DocumentSearch:
             collection: BM25Okapi([tokenize(doc.text) for doc in docs])
             for collection, docs in self._documents.items()
         }
+        self._judge = judge
 
     @classmethod
     def from_directory(cls, root: Path) -> "DocumentSearch":
@@ -60,13 +77,18 @@ class DocumentSearch:
         ]
         return cls(documents)
 
-    def search(self, query: str, collection: Collection) -> list[SearchHit]:
+    def rank(self, query: str, collection: Collection) -> list[SearchHit]:
+        """묶음의 모든 문서를 BM25 점수 순으로 돌려준다."""
         scores = self._indexes[collection].get_scores(tokenize(query))
         hits = [
             SearchHit(document=doc, score=float(score))
             for doc, score in zip(self._documents[collection], scores, strict=True)
         ]
         return sorted(hits, key=lambda hit: hit.score, reverse=True)
+
+    def search(self, query: str, collection: Collection) -> list[SearchHit]:
+        """판정 기준에 맞는 관련 문서만 점수 순으로 돌려준다. 없으면 빈 목록이다."""
+        return self._judge(tokenize(query), self.rank(query, collection))
 
 
 def load_document(path: Path, collection: Collection) -> Document:

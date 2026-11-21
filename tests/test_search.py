@@ -6,6 +6,7 @@ from mini_agent.search import Collection, DocumentSearch, tokenize
 
 DOCS_DIR = Path(__file__).parents[1] / "data" / "docs"
 LEAVE_QUERY = "연차휴가 이월은 최대 며칠까지 가능한가요?"
+WELLNESS_QUERY = "웰니스 포인트는 어디에 쓸 수 있나요?"
 
 
 @pytest.fixture(scope="module")
@@ -33,3 +34,22 @@ def test_search_looks_only_in_the_given_collection(search: DocumentSearch) -> No
 
     assert hits
     assert all(hit.document.collection is Collection.ARCHIVE for hit in hits)
+
+
+def test_rank_returns_every_document_in_the_collection(search: DocumentSearch) -> None:
+    hits = search.rank(WELLNESS_QUERY, Collection.CURRENT)
+
+    assert len(hits) == 15
+    assert [hit.score for hit in hits] == sorted(
+        (hit.score for hit in hits), reverse=True
+    )
+
+
+def test_retired_topic_is_not_found_in_current(search: DocumentSearch) -> None:
+    assert search.search(WELLNESS_QUERY, Collection.CURRENT) == []
+
+
+def test_retired_topic_is_found_in_archive(search: DocumentSearch) -> None:
+    hits = search.search(WELLNESS_QUERY, Collection.ARCHIVE)
+
+    assert hits[0].document.doc_id == "policy-14-wellness-points"
