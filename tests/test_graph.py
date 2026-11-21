@@ -7,7 +7,6 @@ from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph, route_after_llm
 from mini_agent.nodes import (
     DATE_NODE,
-    DATE_TOOL_NAME,
     ERROR_GUIDE_NODE,
     LLM_NODE,
     SEARCH_NODE,
@@ -15,7 +14,8 @@ from mini_agent.nodes import (
 )
 from mini_agent.report import result_text, table_rows
 from mini_agent.result import RecordKind, RunStatus
-from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
+from mini_agent.search import DocumentSearch
+from mini_agent.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME
 
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
 

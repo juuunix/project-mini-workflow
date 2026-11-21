@@ -6,8 +6,14 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMe
 from langchain_core.outputs import ChatGeneration, ChatResult
 
 from mini_agent import messages
-from mini_agent.nodes import DATE_TOOL_NAME
-from mini_agent.search import SEARCH_TOOL_NAME, Collection, SearchArtifact
+from mini_agent.search import Collection
+from mini_agent.tools import (
+    DATE_TOOL_NAME,
+    SEARCH_TOOL_NAME,
+    DateArtifact,
+    SearchArgs,
+    SearchArtifact,
+)
 
 SEARCH_KEYWORDS = ("검색해줘", "찾아줘")
 DATE_KEYWORDS = ("날짜",)
@@ -58,7 +64,8 @@ class FakeLLM(BaseChatModel):
         if tool_name == SEARCH_TOOL_NAME:
             return answer_search_result(question, last, history)
         if tool_name == DATE_TOOL_NAME:
-            return AIMessage(messages.date_answer(last.artifact["date"]))
+            artifact = cast(DateArtifact, last.artifact)
+            return AIMessage(messages.date_answer(artifact["date"]))
         raise ValueError(messages.unknown_tool(tool_name))
 
 
@@ -99,8 +106,8 @@ def requested_tool(history: list[BaseMessage], tool_call_id: str) -> str:
 def search_request(
     question: str, collection: Collection, history: list[BaseMessage], note: str
 ) -> AIMessage:
-    args = {"query": question, "collection": collection}
-    return tool_request(SEARCH_TOOL_NAME, args, history, note)
+    args: SearchArgs = {"query": question, "collection": collection}
+    return tool_request(SEARCH_TOOL_NAME, dict(args), history, note)
 
 
 def tool_request(

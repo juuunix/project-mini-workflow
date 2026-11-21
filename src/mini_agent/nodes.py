@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Callable
 from datetime import date
-from typing import NotRequired, Protocol, TypedDict
+from typing import NotRequired, Protocol, TypedDict, cast
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, ToolCall, ToolMessage
@@ -12,20 +12,19 @@ from langgraph.types import Command
 
 from mini_agent import messages
 from mini_agent.log import Event, log_event
-from mini_agent.search import (
+from mini_agent.search import Collection, DocumentSearch, best_passage
+from mini_agent.tools import (
+    DATE_TOOL_NAME,
     SEARCH_TOOL_NAME,
-    Collection,
-    DocumentSearch,
+    DateArtifact,
+    SearchArgs,
     SearchArtifact,
-    best_passage,
 )
 
 LLM_NODE = "llm"
 SEARCH_NODE = "search"
 DATE_NODE = "date"
 ERROR_GUIDE_NODE = "error_guide"
-
-DATE_TOOL_NAME = "get_today"
 
 logger = logging.getLogger(__name__)
 
@@ -91,8 +90,9 @@ class RagSearchNode:
     def _run(self, call: ToolCall) -> ToolMessage:
         if call["name"] != SEARCH_TOOL_NAME:
             raise ValueError(messages.unsupported_tool(SEARCH_NODE, call["name"]))
-        collection = Collection(call["args"]["collection"])
-        query = call["args"]["query"]
+        args = cast(SearchArgs, call["args"])
+        collection = Collection(args["collection"])
+        query = args["query"]
         hits = self._search.search(query, collection)
         artifact: SearchArtifact = {
             "collection": collection,
@@ -135,11 +135,8 @@ class DateNode:
         if call["name"] != DATE_TOOL_NAME:
             raise ValueError(messages.unsupported_tool(DATE_NODE, call["name"]))
         today = self._today().isoformat()
-        return ToolMessage(
-            content=today,
-            tool_call_id=call["id"],
-            artifact={"date": today},
-        )
+        artifact: DateArtifact = {"date": today}
+        return ToolMessage(content=today, tool_call_id=call["id"], artifact=artifact)
 
 
 def error_guide(state: AgentState) -> MessagesUpdate:
