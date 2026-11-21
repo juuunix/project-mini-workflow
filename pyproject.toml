@@ -35,9 +35,12 @@ line-ending = "lf" # Mac과 Windows에서 줄 끝 형식을 LF로 통일
 exclude = ["experiments"]
 
 [dependency-groups]
-dev = [
-    "pre-commit>=4.7.0",
+test = [
     "pytest>=9.2.0",
+]
+dev = [
+    {include-group = "test"},
+    "pre-commit>=4.7.0",
     "ruff>=0.17.6",
     "ty>=0.0.107",
 ]
