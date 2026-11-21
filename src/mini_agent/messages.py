@@ -47,9 +47,24 @@ def unsupported_tool(node: str, tool_name: str) -> str:
     return f"{node} 노드가 처리하지 않는 도구입니다: {tool_name}"
 
 
+def no_node_for_tool(tool_name: str) -> str:
+    return f"그래프에 실행할 노드가 없는 도구입니다: {tool_name}"
+
+
 def no_documents(collection: str) -> str:
     return f"{COLLECTION_LABELS[collection]}({collection}) 문서가 하나도 없습니다."
 
 
 def error_guide(node: str, reason: str) -> str:
     return f"{node} 노드가 실패해 답변하지 못했습니다. ({reason})"
+
+
+ERROR_HANDLER_LABEL = "오류 처리"
+
+
+def record_label(succeeded: bool) -> str:
+    return "성공" if succeeded else "실패"
+
+
+def result_line(status: str) -> str:
+    return f"결과: {'성공' if status == 'success' else '실패'}"
