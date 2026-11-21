@@ -24,13 +24,7 @@ from mini_agent.nodes import (
 )
 from mini_agent.search import SEARCH_TOOL_NAME, Collection, DocumentSearch, SearchHit
 
-DOCS_DIR = Path(__file__).parents[1] / "data" / "docs"
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
-
-
-@pytest.fixture(scope="module")
-def search() -> DocumentSearch:
-    return DocumentSearch.from_directory(DOCS_DIR)
 
 
 def state_with(*messages: AnyMessage) -> AgentState:
@@ -99,8 +93,8 @@ def test_search_node_fails_on_unknown_collection(search: DocumentSearch) -> None
         run_search_node(search, search_request("nowhere"))
 
 
-def test_search_failure_raises_out_of_node() -> None:
-    broken = BrokenSearch.from_directory(DOCS_DIR)
+def test_search_failure_raises_out_of_node(docs_dir: Path) -> None:
+    broken = BrokenSearch.from_directory(docs_dir)
 
     with pytest.raises(FileNotFoundError):
         run_search_node(broken, search_request("current"))

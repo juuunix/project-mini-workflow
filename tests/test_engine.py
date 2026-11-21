@@ -27,6 +27,15 @@ class RaiseError:
         raise ValueError("boom")
 
 
+class CountRuns:
+    def __init__(self) -> None:
+        self.runs = 0
+
+    def __call__(self, state: PathState) -> dict[str, list[str]]:
+        self.runs += 1
+        return {"path": ["L"]}
+
+
 def build_chain(nodes: list[tuple[str, AppendName | RaiseError]]) -> CompiledStateGraph:
     builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
     previous = START
@@ -35,6 +44,14 @@ def build_chain(nodes: list[tuple[str, AppendName | RaiseError]]) -> CompiledSta
         builder.add_edge(previous, name)
         previous = name
     builder.add_edge(previous, END)
+    return builder.compile()
+
+
+def build_endless_loop(node: AppendName | CountRuns) -> CompiledStateGraph:
+    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
+    builder.add_node("L", node)
+    builder.add_edge(START, "L")
+    builder.add_edge("L", "L")
     return builder.compile()
 
 
@@ -98,35 +115,15 @@ def test_node_failure_with_handler_records_handling_and_succeeds() -> None:
 
 
 def test_endless_loop_stops_with_step_limit_exceeded() -> None:
-    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
-    builder.add_node("L", AppendName("L"))
-    builder.add_edge(START, "L")
-    builder.add_edge("L", "L")
+    graph = build_endless_loop(AppendName("L"))
 
-    result = run_graph(builder.compile(), {"path": []}, recursion_limit=5)
+    result = run_graph(graph, {"path": []}, recursion_limit=5)
 
     assert result.status is RunStatus.FAILURE
     assert result.stop_reason is not None
     assert result.stop_reason.kind is StopKind.STEP_LIMIT_EXCEEDED
     assert result.stop_reason.node == "L"
     assert [record.node for record in result.history] == ["L"] * 5
-
-
-class CountRuns:
-    def __init__(self) -> None:
-        self.runs = 0
-
-    def __call__(self, state: PathState) -> dict[str, list[str]]:
-        self.runs += 1
-        return {"path": ["L"]}
-
-
-def build_endless_loop(node: CountRuns) -> CompiledStateGraph:
-    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
-    builder.add_node("L", node)
-    builder.add_edge(START, "L")
-    builder.add_edge("L", "L")
-    return builder.compile()
 
 
 def test_node_over_its_limit_stops_before_running_again() -> None:

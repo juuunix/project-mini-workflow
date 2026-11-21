@@ -4,14 +4,8 @@ import pytest
 
 from mini_agent.search import Collection, DocumentSearch, tokenize
 
-DOCS_DIR = Path(__file__).parents[1] / "data" / "docs"
 LEAVE_QUERY = "연차휴가 이월은 최대 며칠까지 가능한가요?"
 WELLNESS_QUERY = "웰니스 포인트는 어디에 쓸 수 있나요?"
-
-
-@pytest.fixture(scope="module")
-def search() -> DocumentSearch:
-    return DocumentSearch.from_directory(DOCS_DIR)
 
 
 def test_tokenize_splits_words_into_two_character_pieces() -> None:
