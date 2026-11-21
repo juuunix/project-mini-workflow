@@ -112,6 +112,46 @@ def test_endless_loop_stops_with_step_limit_exceeded() -> None:
     assert [record.node for record in result.history] == ["L"] * 5
 
 
+class CountRuns:
+    def __init__(self) -> None:
+        self.runs = 0
+
+    def __call__(self, state: PathState) -> dict[str, list[str]]:
+        self.runs += 1
+        return {"path": ["L"]}
+
+
+def build_endless_loop(node: CountRuns) -> CompiledStateGraph:
+    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
+    builder.add_node("L", node)
+    builder.add_edge(START, "L")
+    builder.add_edge("L", "L")
+    return builder.compile()
+
+
+def test_node_over_its_limit_stops_before_running_again() -> None:
+    node = CountRuns()
+
+    result = run_graph(build_endless_loop(node), {"path": []}, node_limits={"L": 3})
+
+    assert result.status is RunStatus.FAILURE
+    assert result.stop_reason is not None
+    assert result.stop_reason.kind is StopKind.NODE_LIMIT_EXCEEDED
+    assert result.stop_reason.node == "L"
+    assert [record.node for record in result.history] == ["L"] * 3
+    assert node.runs == 3
+
+
+def test_node_counts_start_over_for_each_run() -> None:
+    graph = build_endless_loop(CountRuns())
+
+    first = run_graph(graph, {"path": []}, node_limits={"L": 3})
+    second = run_graph(graph, {"path": []}, node_limits={"L": 3})
+
+    assert len(first.history) == 3
+    assert len(second.history) == 3
+
+
 def test_error_outside_nodes_is_not_reported_as_node_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

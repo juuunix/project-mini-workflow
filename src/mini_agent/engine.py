@@ -1,3 +1,5 @@
+from collections import Counter
+from collections.abc import Mapping
 from typing import Any
 
 from langgraph.errors import GraphRecursionError
@@ -23,11 +25,14 @@ def run_graph(
     graph: CompiledStateGraph,
     initial_state: dict[str, Any],
     recursion_limit: int = DEFAULT_RECURSION_LIMIT,
+    node_limits: Mapping[str, int] | None = None,
 ) -> RunResult:
     history: list[ExecutionRecord] = []
     state: dict[str, Any] = initial_state
     failed_node: str | None = None
     node_error: object = None
+    limits = node_limits or {}
+    run_counts: Counter[str] = Counter()
 
     try:
         for part in graph.stream(
@@ -38,6 +43,19 @@ def run_graph(
         ):
             if part["type"] == "values":
                 state = part["data"]
+            elif part["type"] == "tasks" and "input" in part["data"]:
+                # 시작 이벤트는 노드 본문보다 먼저 오므로, 여기서 멈추면 넘친 실행은 일어나지 않는다.
+                name = part["data"]["name"]
+                run_counts[name] += 1
+                if name in limits and run_counts[name] > limits[name]:
+                    stop_reason = StopReason(
+                        kind=StopKind.NODE_LIMIT_EXCEEDED,
+                        node=name,
+                        detail=messages.node_limit_detail(limits[name]),
+                    )
+                    return RunResult(
+                        history=history, state=state, stop_reason=stop_reason
+                    )
             elif part["type"] == "tasks" and "input" not in part["data"]:
                 name = part["data"]["name"]
                 error = part["data"]["error"]
