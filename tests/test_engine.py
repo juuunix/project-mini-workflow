@@ -1,10 +1,12 @@
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, NoReturn, TypedDict
 
+import pytest
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from mini_agent.engine import run_graph
-from mini_agent.result import RunStatus
+from mini_agent.result import RunStatus, StopKind
 
 
 class PathState(TypedDict):
@@ -19,17 +21,60 @@ class AppendName:
         return {"path": [self.name]}
 
 
-def test_runs_nodes_in_order_and_succeeds() -> None:
-    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
-    for name in ["A", "B", "C"]:
-        builder.add_node(name, AppendName(name))
-    builder.add_edge(START, "A")
-    builder.add_edge("A", "B")
-    builder.add_edge("B", "C")
-    builder.add_edge("C", END)
+class RaiseError:
+    def __call__(self, state: PathState) -> dict[str, list[str]]:
+        raise ValueError("boom")
 
-    result = run_graph(builder.compile(), {"path": []})
+
+def build_chain(nodes: list[tuple[str, AppendName | RaiseError]]) -> CompiledStateGraph:
+    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
+    previous = START
+    for name, node in nodes:
+        builder.add_node(name, node)
+        builder.add_edge(previous, name)
+        previous = name
+    builder.add_edge(previous, END)
+    return builder.compile()
+
+
+def test_runs_nodes_in_order_and_succeeds() -> None:
+    graph = build_chain(
+        [("A", AppendName("A")), ("B", AppendName("B")), ("C", AppendName("C"))]
+    )
+
+    result = run_graph(graph, {"path": []})
 
     assert [record.node for record in result.history] == ["A", "B", "C"]
     assert result.status is RunStatus.SUCCESS
     assert result.state == {"path": ["A", "B", "C"]}
+
+
+def test_node_failure_without_handler_stops_with_failure() -> None:
+    graph = build_chain(
+        [("A", AppendName("A")), ("B", RaiseError()), ("C", AppendName("C"))]
+    )
+
+    result = run_graph(graph, {"path": []})
+
+    assert result.status is RunStatus.FAILURE
+    assert [record.node for record in result.history] == ["A", "B"]
+    assert not result.history[-1].succeeded
+    assert result.stop_reason is not None
+    assert result.stop_reason.kind is StopKind.NODE_FAILURE
+    assert result.stop_reason.node == "B"
+    assert "ValueError" in result.stop_reason.detail
+    assert result.state == {"path": ["A"]}
+
+
+def test_error_outside_nodes_is_not_reported_as_node_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    graph = build_chain([("A", AppendName("A"))])
+
+    def broken_stream(*args: object, **kwargs: object) -> NoReturn:
+        raise RuntimeError("not a node")
+
+    monkeypatch.setattr(graph, "stream", broken_stream)
+
+    with pytest.raises(RuntimeError, match="not a node"):
+        run_graph(graph, {"path": []})

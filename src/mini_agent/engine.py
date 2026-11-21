@@ -2,25 +2,54 @@ from typing import Any
 
 from langgraph.graph.state import CompiledStateGraph
 
-from mini_agent.result import ExecutionRecord, RecordKind, RunResult
+from mini_agent.result import (
+    ExecutionRecord,
+    RecordKind,
+    RunResult,
+    StopKind,
+    StopReason,
+)
 
 
 def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunResult:
     history: list[ExecutionRecord] = []
     state: dict[str, Any] = initial_state
+    failed_node: str | None = None
+    node_error: object = None
 
-    for part in graph.stream(
-        initial_state, stream_mode=["tasks", "values"], version="v2"
-    ):
-        if part["type"] == "values":
-            state = part["data"]
-        elif part["type"] == "tasks" and "result" in part["data"]:
-            history.append(
-                ExecutionRecord(
-                    kind=RecordKind.NODE,
-                    node=part["data"]["name"],
-                    summary=str(part["data"]["result"]),
+    try:
+        for part in graph.stream(
+            initial_state, stream_mode=["tasks", "values"], version="v2"
+        ):
+            if part["type"] == "values":
+                state = part["data"]
+            elif part["type"] == "tasks" and "input" not in part["data"]:
+                error = part["data"]["error"]
+                if error is not None:
+                    failed_node, node_error = part["data"]["name"], error
+                history.append(
+                    ExecutionRecord(
+                        kind=RecordKind.NODE,
+                        node=part["data"]["name"],
+                        summary=str(part["data"]["result"]),
+                        error=None if error is None else describe_error(error),
+                    )
                 )
-            )
+    except Exception as caught:
+        if failed_node is None or caught is not node_error:
+            raise
+        stop_reason = StopReason(
+            kind=StopKind.NODE_FAILURE,
+            node=failed_node,
+            detail=describe_error(caught),
+        )
+        return RunResult(history=history, state=state, stop_reason=stop_reason)
 
     return RunResult(history=history, state=state)
+
+
+def describe_error(error: BaseException | str) -> str:
+    """LangGraph는 종료 이벤트의 error를 문자열로 선언하지만 실제로는 예외 객체를 넣는다."""
+    if isinstance(error, BaseException):
+        return f"{type(error).__name__}: {error}"
+    return error
