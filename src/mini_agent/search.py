@@ -3,15 +3,30 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import TypedDict
 
 from rank_bm25 import BM25Okapi
 
 WORD_PATTERN = re.compile(r"[0-9A-Za-z가-힣]+")
 
+SEARCH_TOOL_NAME = "search_documents"
+
 
 class Collection(StrEnum):
     CURRENT = "current"
     ARCHIVE = "archive"
+
+
+class FoundDocument(TypedDict):
+    doc_id: str
+    title: str
+
+
+class SearchArtifact(TypedDict):
+    """문서 검색 결과 메시지(ToolMessage)의 artifact. LLM에는 보내지 않고 코드만 읽는다."""
+
+    collection: Collection
+    documents: list[FoundDocument]
 
 
 @dataclass(frozen=True)
