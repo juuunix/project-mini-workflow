@@ -72,9 +72,9 @@ def run_graph(
                         node_run=run_counts[name],
                     )
                 else:
-                    if event["error"] is not None:
-                        failed_node, node_error = event["name"], event["error"]
                     record = to_record(event)
+                    if event["error"] is not None:
+                        failed_node, node_error = record.node, event["error"]
                     log_record(record, event["error"])
                     history.append(record)
     except GraphRecursionError:
