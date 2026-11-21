@@ -48,6 +48,7 @@ def test_question_with_search_keyword_requests_current_search() -> None:
 
     assert requested_collection(response) == Collection.CURRENT
     assert response.tool_calls[0]["args"]["query"] == "웰니스 포인트 검색해줘"
+    assert response.text == messages.SEARCH_CURRENT_NOTE
 
 
 def test_question_without_search_keyword_is_answered_directly() -> None:
@@ -93,6 +94,7 @@ def test_nothing_found_in_current_requests_archive_search() -> None:
     )
 
     assert requested_collection(response) == Collection.ARCHIVE
+    assert response.text == messages.SEARCH_ARCHIVE_NOTE
 
 
 def test_nothing_found_in_archive_is_answered_as_not_found() -> None:
@@ -161,6 +163,7 @@ def test_question_about_date_requests_date_tool() -> None:
 
     assert len(response.tool_calls) == 1
     assert response.tool_calls[0]["name"] == DATE_TOOL_NAME
+    assert response.text == messages.DATE_NOTE
 
 
 def test_date_result_is_answered_with_the_date() -> None:

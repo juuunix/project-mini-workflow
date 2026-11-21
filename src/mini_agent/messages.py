@@ -61,3 +61,8 @@ def error_guide(node: str, reason: str, attempts: int) -> str:
 def date_answer(today: str) -> str:
     year, month, day = today.split("-")
     return f"오늘은 {int(year)}년 {int(month)}월 {int(day)}일입니다."
+
+
+SEARCH_CURRENT_NOTE = "현행 문서에서 찾아보겠습니다."
+SEARCH_ARCHIVE_NOTE = "현행 문서에 없어 보관 문서에서 다시 찾아보겠습니다."
+DATE_NOTE = "오늘 날짜를 확인하겠습니다."

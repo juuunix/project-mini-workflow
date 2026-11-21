@@ -42,9 +42,11 @@ class FakeLLM(BaseChatModel):
 
         if not isinstance(last, ToolMessage):
             if any(keyword in question for keyword in DATE_KEYWORDS):
-                return tool_request(DATE_TOOL_NAME, {}, history)
+                return tool_request(DATE_TOOL_NAME, {}, history, messages.DATE_NOTE)
             if any(keyword in question for keyword in SEARCH_KEYWORDS):
-                return search_request(question, Collection.CURRENT, history)
+                return search_request(
+                    question, Collection.CURRENT, history, messages.SEARCH_CURRENT_NOTE
+                )
             return AIMessage(messages.DIRECT_ANSWER)
 
         if question in self.timeout_questions:
@@ -72,7 +74,9 @@ def answer_search_result(
             answer = f"{answer}\n{messages.ARCHIVE_NOTICE}"
         return AIMessage(answer)
     if not in_archive:
-        return search_request(question, Collection.ARCHIVE, history)
+        return search_request(
+            question, Collection.ARCHIVE, history, messages.SEARCH_ARCHIVE_NOTE
+        )
     return AIMessage(messages.NOT_FOUND_ANSWER)
 
 
@@ -91,18 +95,19 @@ def requested_tool(history: list[BaseMessage], tool_call_id: str) -> str:
 
 
 def search_request(
-    question: str, collection: Collection, history: list[BaseMessage]
+    question: str, collection: Collection, history: list[BaseMessage], note: str
 ) -> AIMessage:
     args = {"query": question, "collection": collection}
-    return tool_request(SEARCH_TOOL_NAME, args, history)
+    return tool_request(SEARCH_TOOL_NAME, args, history, note)
 
 
 def tool_request(
-    tool_name: str, args: dict[str, object], history: list[BaseMessage]
+    tool_name: str, args: dict[str, object], history: list[BaseMessage], note: str
 ) -> AIMessage:
+    """도구 요청 메시지를 만든다. note에는 왜 이 도구를 요청하는지 짧게 적는다."""
     # 같은 메시지 목록에는 같은 응답을 내도록, 호출 ID를 지금까지의 LLM 응답 수로 정한다.
     call_number = sum(isinstance(m, AIMessage) for m in history) + 1
     return AIMessage(
-        content="",
+        content=note,
         tool_calls=[{"name": tool_name, "args": args, "id": f"call_{call_number}"}],
     )

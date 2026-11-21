@@ -53,9 +53,14 @@ def run_report(result: RunResult) -> RenderableType:
 
 def step_table(result: RunResult) -> Table:
     table = Table(box=box.SQUARE)
-    for column in ["#", "이동", "상태", "노드", "실행"]:
-        table.add_column(column, no_wrap=True)
-    table.add_column("출력")
+    # 좁은 화면에서도 출력이 말줄임으로 잘리지 않도록, 짧은 열만 한 줄로 두고
+    # 이동과 노드는 줄바꿈을, 출력은 긴 단어도 다음 줄로 넘기는 것을 허용한다.
+    table.add_column("#", no_wrap=True)
+    table.add_column("이동")
+    table.add_column("상태", no_wrap=True)
+    table.add_column("노드")
+    table.add_column("실행", no_wrap=True)
+    table.add_column("출력", overflow="fold")
     for number, move, status, node, count, output in table_rows(result):
         styled = Text(status, style=STATUS_STYLES[status])
         table.add_row(number, move, styled, node, count, output)
@@ -104,15 +109,15 @@ def answer_panel(result: RunResult) -> Panel:
 
     답변 없이 중단된 실행은 결과만 담은 상자로 보여 준다.
     """
-    summary = result_text(result)
+    summary = result_summary(result)
     answer = final_answer(result.state)
     if answer is None:
-        return Panel(Text(summary), title="결과", title_align="left", expand=False)
+        return Panel(summary, title="결과", title_align="left", expand=False)
     return Panel(
         Text(answer),
         title="답변",
         title_align="left",
-        subtitle=Text(summary),
+        subtitle=summary,
         subtitle_align="right",
         expand=False,
     )
@@ -175,9 +180,24 @@ def final_answer(state: dict[str, Any]) -> str | None:
 
 
 def result_text(result: RunResult) -> str:
-    label = "성공" if result.stop_reason is None else "실패"
+    """끝까지 실행됐는지와 노드별 실행 횟수. 실패를 오류 처리기가 받아 끝났으면 그 수를 함께 적는다."""
+    return result_summary(result).plain
+
+
+def result_summary(result: RunResult) -> Text:
+    """결과 글. 앞의 성공·실패 표시에만 색을 붙여 강조한다."""
+    if result.stop_reason is not None:
+        label, style = "실패", "bold red"
+    elif handled := sum(not record.succeeded for record in result.history):
+        label, style = f"성공 ({ERROR_HANDLING} {handled}건)", "yellow"
+    else:
+        label, style = "성공", "green"
     counts = Counter(
         record.node for record in result.history if record.kind is RecordKind.NODE
     )
     runs = ", ".join(f"{node} {count}회" for node, count in counts.items())
-    return f"{label} · {runs}" if runs else label
+    summary = Text()
+    summary.append(label, style=style)
+    if runs:
+        summary.append(f" · {runs}")
+    return summary

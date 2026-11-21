@@ -13,7 +13,7 @@ from mini_agent.nodes import (
     SEARCH_NODE,
     AgentState,
 )
-from mini_agent.report import table_rows
+from mini_agent.report import result_text, table_rows
 from mini_agent.result import RecordKind, RunStatus
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
@@ -68,6 +68,18 @@ def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
     ]
     assert rows[2][5].startswith("TimeoutError")
     assert "attempts: 3" in rows[3][5]
+    assert result_text(result) == (
+        "성공 (오류 처리 1건) · llm 2회, search 1회, error_guide 1회"
+    )
+
+
+def test_result_text_has_no_error_note_without_failures(
+    search: DocumentSearch,
+) -> None:
+    graph = build_graph(FakeLLM(), search)
+    result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
+
+    assert result_text(result) == "성공 · llm 2회, search 1회"
 
 
 def test_llm_timeout_is_retried_then_guided(search: DocumentSearch) -> None:
