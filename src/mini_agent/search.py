@@ -107,7 +107,7 @@ class DocumentSearch:
 
     @classmethod
     def from_directory(cls, root: Path) -> "DocumentSearch":
-        """root 아래 묶음 이름의 폴더(current, archive)에서 .md 문서를 읽는다."""
+        """root 아래 컬렉션 이름의 폴더(current, archive)에서 .md 문서를 읽는다."""
         documents = [
             load_document(path, collection)
             for collection in Collection
@@ -116,7 +116,7 @@ class DocumentSearch:
         return cls(documents)
 
     def rank(self, query: str, collection: Collection) -> list[SearchHit]:
-        """묶음의 모든 문서를 BM25 점수 순으로 돌려준다."""
+        """컬렉션의 모든 문서를 BM25 점수 순으로 돌려준다."""
         scores = self._indexes[collection].get_scores(tokenize(query))
         hits = [
             SearchHit(document=doc, score=float(score))
