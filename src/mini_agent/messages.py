@@ -64,6 +64,10 @@ def not_utf8_document(path: Path) -> str:
     return f"UTF-8로 읽을 수 없는 문서입니다: {path}"
 
 
+def unreadable_document(path: Path, error: OSError) -> str:
+    return f"열 수 없는 문서입니다: {path} ({error.strerror})"
+
+
 def log_file_unavailable(error: OSError) -> str:
     return f"로그 파일을 열 수 없어 로그 없이 실행합니다: {error}"
 

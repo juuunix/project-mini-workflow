@@ -122,6 +122,8 @@ def load_document(path: Path, collection: Collection) -> Document:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError as error:
         raise DocumentLoadError(messages.not_utf8_document(path)) from error
+    except OSError as error:
+        raise DocumentLoadError(messages.unreadable_document(path, error)) from error
     if not text.strip():
         raise DocumentLoadError(messages.empty_document(path))
     title = text.splitlines()[0].lstrip("# ")
