@@ -7,6 +7,8 @@ from typing import TypedDict
 
 from rank_bm25 import BM25Okapi
 
+from mini_agent import messages
+
 WORD_PATTERN = re.compile(r"[0-9A-Za-z가-힣]+")
 
 SEARCH_TOOL_NAME = "search_documents"
@@ -76,6 +78,9 @@ class DocumentSearch:
             collection: [doc for doc in documents if doc.collection is collection]
             for collection in Collection
         }
+        for collection, docs in self._documents.items():
+            if not docs:
+                raise ValueError(messages.no_documents(collection))
         self._indexes = {
             collection: BM25Okapi([tokenize(doc.text) for doc in docs])
             for collection, docs in self._documents.items()

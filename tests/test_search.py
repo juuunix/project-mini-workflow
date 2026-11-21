@@ -53,3 +53,8 @@ def test_retired_topic_is_found_in_archive(search: DocumentSearch) -> None:
     hits = search.search(WELLNESS_QUERY, Collection.ARCHIVE)
 
     assert hits[0].document.doc_id == "policy-14-wellness-points"
+
+
+def test_search_without_documents_is_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="current"):
+        DocumentSearch.from_directory(tmp_path)

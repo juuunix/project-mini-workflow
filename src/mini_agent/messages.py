@@ -31,3 +31,25 @@ def unmatched_tool_result(tool_call_id: str) -> str:
 
 def llm_timeout(question: str) -> str:
     return f"LLM 응답 시간 초과: {question}"
+
+
+COLLECTION_LABELS = {"current": "현행", "archive": "보관"}
+
+
+def search_result_text(collection: str, titles: list[str]) -> str:
+    label = COLLECTION_LABELS[collection]
+    if not titles:
+        return f"{label} 문서에서 관련 문서를 찾지 못했습니다."
+    return f"{label} 문서에서 {len(titles)}건을 찾았습니다: {', '.join(titles)}"
+
+
+def unsupported_tool(node: str, tool_name: str) -> str:
+    return f"{node} 노드가 처리하지 않는 도구입니다: {tool_name}"
+
+
+def no_documents(collection: str) -> str:
+    return f"{COLLECTION_LABELS[collection]}({collection}) 문서가 하나도 없습니다."
+
+
+def error_guide(node: str, reason: str) -> str:
+    return f"{node} 노드가 실패해 답변하지 못했습니다. ({reason})"
