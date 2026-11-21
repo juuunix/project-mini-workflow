@@ -63,18 +63,3 @@ def error_guide(node: str, reason: str, attempts: int) -> str:
     return (
         f"{node} 노드가 {attempts}번 시도 끝에 실패해 답변하지 못했습니다. ({reason})"
     )
-
-
-ERROR_HANDLER_LABEL = "오류 처리"
-
-
-def record_label(succeeded: bool) -> str:
-    return "성공" if succeeded else "실패"
-
-
-def result_line(status: str) -> str:
-    return f"결과: {'성공' if status == 'success' else '실패'}"
-
-
-def question_line(question: str) -> str:
-    return f"질문: {question}"

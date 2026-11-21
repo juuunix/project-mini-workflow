@@ -23,7 +23,7 @@ class StopKind(StrEnum):
 class ExecutionRecord:
     kind: RecordKind
     node: str
-    summary: str
+    output: dict[str, Any]
     error: str | None = None
 
     @property

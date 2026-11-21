@@ -6,7 +6,7 @@ from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph, route_after_llm
 from mini_agent.nodes import ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE, AgentState
-from mini_agent.report import format_result
+from mini_agent.report import table_rows
 from mini_agent.result import RecordKind, RunStatus
 from mini_agent.search import SEARCH_TOOL_NAME, DocumentSearch
 
@@ -29,18 +29,38 @@ def test_current_document_question_goes_llm_search_llm(search: DocumentSearch) -
     assert "연차휴가 및 경조휴가 규정" in answer.text
 
 
-def test_report_shows_each_node_in_order(search: DocumentSearch) -> None:
+def test_table_rows_show_moves_and_counts(search: DocumentSearch) -> None:
     graph = build_graph(FakeLLM(), search)
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
-    lines = format_result(result)
+    rows = table_rows(result)
 
-    assert lines == [
-        f"[성공] {LLM_NODE}",
-        f"[성공] {SEARCH_NODE}",
-        f"[성공] {LLM_NODE}",
-        "결과: 성공",
+    assert [row[:5] for row in rows] == [
+        ("1", "START → llm", "성공", LLM_NODE, "1"),
+        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1"),
+        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "성공", LLM_NODE, "2"),
+        ("4", f"{LLM_NODE} → END", "종료", "", ""),
     ]
+
+
+def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
+    llm = FakeLLM(timeout_questions=frozenset({LEAVE_QUESTION}))
+    no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
+    graph = build_graph(llm, search, llm_retry=no_wait)
+    result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
+
+    rows = table_rows(result)
+
+    assert [row[:5] for row in rows] == [
+        ("1", "START → llm", "성공", LLM_NODE, "1"),
+        ("2", f"{LLM_NODE} → {SEARCH_NODE}", "성공", SEARCH_NODE, "1"),
+        ("3", f"{SEARCH_NODE} → {LLM_NODE}", "실패", LLM_NODE, "2"),
+        ("4", f"{LLM_NODE} → 오류 처리", "오류 처리", LLM_NODE, ""),
+        ("5", f"오류 처리 → {ERROR_GUIDE_NODE}", "성공", ERROR_GUIDE_NODE, "1"),
+        ("6", f"{ERROR_GUIDE_NODE} → END", "종료", "", ""),
+    ]
+    assert rows[2][5].startswith("TimeoutError")
+    assert "attempts: 3" in rows[3][5]
 
 
 def test_llm_timeout_is_retried_then_guided(search: DocumentSearch) -> None:

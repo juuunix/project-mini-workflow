@@ -23,14 +23,14 @@ def test_run_with_stop_reason_is_failure() -> None:
 
 
 def test_record_without_error_succeeded() -> None:
-    record = ExecutionRecord(kind=RecordKind.NODE, node="a", summary="ok")
+    record = ExecutionRecord(kind=RecordKind.NODE, node="a", output={"x": 1})
 
     assert record.succeeded
 
 
 def test_record_with_error_failed() -> None:
     record = ExecutionRecord(
-        kind=RecordKind.NODE, node="a", summary="", error="ValueError: boom"
+        kind=RecordKind.NODE, node="a", output={}, error="ValueError: boom"
     )
 
     assert not record.succeeded

@@ -95,7 +95,7 @@ def to_record(event: TaskResultPayload) -> ExecutionRecord:
     return ExecutionRecord(
         kind=kind,
         node=node,
-        summary=str(event["result"]),
+        output=event["result"],
         error=None if error is None else describe_error(error),
     )
 

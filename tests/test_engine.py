@@ -64,6 +64,7 @@ def test_runs_nodes_in_order_and_succeeds() -> None:
 
     assert [record.node for record in result.history] == ["A", "B", "C"]
     assert result.status is RunStatus.SUCCESS
+    assert result.history[0].output == {"path": ["A"]}
     assert result.state == {"path": ["A", "B", "C"]}
 
 
