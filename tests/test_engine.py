@@ -4,9 +4,10 @@ from typing import Annotated, NoReturn, TypedDict
 import pytest
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Command
 
 from mini_agent.engine import run_graph
-from mini_agent.result import RunStatus, StopKind
+from mini_agent.result import RecordKind, RunStatus, StopKind
 
 
 class PathState(TypedDict):
@@ -64,6 +65,36 @@ def test_node_failure_without_handler_stops_with_failure() -> None:
     assert result.stop_reason.node == "B"
     assert "ValueError" in result.stop_reason.detail
     assert result.state == {"path": ["A"]}
+
+
+def send_to_recover(state: PathState) -> Command:
+    return Command(goto="RECOVER")
+
+
+def test_node_failure_with_handler_records_handling_and_succeeds() -> None:
+    builder = StateGraph(PathState)  # ty: ignore[invalid-argument-type]
+    builder.add_node("A", AppendName("A"))
+    builder.add_node("B", RaiseError(), error_handler=send_to_recover)
+    builder.add_node("C", AppendName("C"))
+    builder.add_node("RECOVER", AppendName("RECOVER"))
+    builder.add_edge(START, "A")
+    builder.add_edge("A", "B")
+    builder.add_edge("B", "C")
+    builder.add_edge("C", END)
+    builder.add_edge("RECOVER", END)
+
+    result = run_graph(builder.compile(), {"path": []})
+
+    assert result.status is RunStatus.SUCCESS
+    assert result.stop_reason is None
+    assert [(record.kind, record.node) for record in result.history] == [
+        (RecordKind.NODE, "A"),
+        (RecordKind.NODE, "B"),
+        (RecordKind.ERROR_HANDLER, "B"),
+        (RecordKind.NODE, "RECOVER"),
+    ]
+    assert not result.history[1].succeeded
+    assert result.state == {"path": ["A", "RECOVER"]}
 
 
 def test_error_outside_nodes_is_not_reported_as_node_failure(

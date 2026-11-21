@@ -10,6 +10,9 @@ from mini_agent.result import (
     StopReason,
 )
 
+# LangGraph가 노드 B의 오류 처리기를 "__error_handler__B"라는 이름으로 실행한다.
+ERROR_HANDLER_PREFIX = "__error_handler__"
+
 
 def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunResult:
     history: list[ExecutionRecord] = []
@@ -24,13 +27,19 @@ def run_graph(graph: CompiledStateGraph, initial_state: dict[str, Any]) -> RunRe
             if part["type"] == "values":
                 state = part["data"]
             elif part["type"] == "tasks" and "input" not in part["data"]:
+                name = part["data"]["name"]
                 error = part["data"]["error"]
                 if error is not None:
-                    failed_node, node_error = part["data"]["name"], error
+                    failed_node, node_error = name, error
+                if name.startswith(ERROR_HANDLER_PREFIX):
+                    kind = RecordKind.ERROR_HANDLER
+                    name = name.removeprefix(ERROR_HANDLER_PREFIX)
+                else:
+                    kind = RecordKind.NODE
                 history.append(
                     ExecutionRecord(
-                        kind=RecordKind.NODE,
-                        node=part["data"]["name"],
+                        kind=kind,
+                        node=name,
                         summary=str(part["data"]["result"]),
                         error=None if error is None else describe_error(error),
                     )
