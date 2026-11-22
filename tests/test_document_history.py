@@ -1,6 +1,6 @@
 import pytest
 
-from mini_agent.documents import (
+from mini_agent.document_history import (
     FIND_DOCUMENTS_NODE,
     MAX_DOCUMENTS,
     NO_DOCUMENTS_NODE,

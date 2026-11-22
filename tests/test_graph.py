@@ -4,7 +4,7 @@ from langgraph.graph import END
 
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import LLM_RETRY_POLICY, build_graph, route_after_llm
+from mini_agent.graph import LLM_RETRY_POLICY, build_agent_graph, route_after_llm
 from mini_agent.nodes import (
     DATE_NODE,
     ERROR_GUIDE_NODE,
@@ -21,7 +21,7 @@ LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아
 
 
 def test_current_document_question_goes_llm_search_llm(search: DocumentSearch) -> None:
-    graph = build_graph(FakeLLM(), search)
+    graph = build_agent_graph(FakeLLM(), search)
 
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
@@ -37,7 +37,7 @@ def test_current_document_question_goes_llm_search_llm(search: DocumentSearch) -
 
 
 def test_table_rows_show_moves_and_counts(search: DocumentSearch) -> None:
-    graph = build_graph(FakeLLM(), search)
+    graph = build_agent_graph(FakeLLM(), search)
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
     rows = table_rows(result)
@@ -53,7 +53,7 @@ def test_table_rows_show_moves_and_counts(search: DocumentSearch) -> None:
 def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
     llm = FakeLLM(timeout_questions=frozenset({LEAVE_QUESTION}))
     no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
-    graph = build_graph(llm, search, llm_retry=no_wait)
+    graph = build_agent_graph(llm, search, llm_retry=no_wait)
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
     rows = table_rows(result)
@@ -76,7 +76,7 @@ def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
 def test_result_text_has_no_error_note_without_failures(
     search: DocumentSearch,
 ) -> None:
-    graph = build_graph(FakeLLM(), search)
+    graph = build_agent_graph(FakeLLM(), search)
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
     assert result_text(result) == "성공 · llm 2회, search 1회"
@@ -85,7 +85,7 @@ def test_result_text_has_no_error_note_without_failures(
 def test_llm_timeout_is_retried_then_guided(search: DocumentSearch) -> None:
     llm = FakeLLM(timeout_questions=frozenset({LEAVE_QUESTION}))
     no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
-    graph = build_graph(llm, search, llm_retry=no_wait)
+    graph = build_agent_graph(llm, search, llm_retry=no_wait)
 
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 

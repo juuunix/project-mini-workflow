@@ -40,7 +40,7 @@
 - (39) 엔진의 예외 처리가 올바르게 동작하는지 AI에 검증을 요청했고, 노드가 던진 `GraphRecursionError`를 전체 단계 수 상한 초과로 잘못 기록하는 문제를 찾아 엔진(`src/mini_agent/engine.py`)을 고쳤습니다.
 - (40) Docker 이미지가 847MB로 커서 무엇이 공간을 차지하는지 AI에 확인을 요청했고, uv 다운로드 캐시와 코드 검사 도구가 들어 있는 것을 보고 이를 빼도록 요청했습니다. 이어서 Debian slim 대신 Alpine 기반 이미지로 시험해 보게 하고, 테스트와 시연이 통과하는 것을 확인한 뒤 바꿨습니다. Docker 이미지 설정(`Dockerfile`)과 패키지 묶음(`pyproject.toml`, `uv.lock`)을 고쳐 이미지를 359MB로 줄였습니다.
 - (41) 과제 안내문을 다시 보고, 지금 구조가 에이전트 하나에 너무 묶여 있고 과제는 n8n처럼 여러 워크플로우를 실행하는 엔진에 가깝다고 판단했습니다. 이에 맞게 구조를 바꾸는 방향에 대해 AI의 의견을 묻고, 정한 방향을 아키텍처 문서(`docs/architecture.md`)에 반영하도록 요청했습니다.
-- (42) (41)에서 정한 문서 이력 워크플로우의 노드와 그래프(`src/mini_agent/documents.py`), 안내 문구(`src/mini_agent/messages.py`), 그 테스트(`tests/test_documents.py`) 작성을 AI에 요청했습니다. 단계를 나눠 단계마다 테스트를 먼저 쓰고, 통과하면 다음 단계로 넘어가도록 했습니다.
+- (42) (41)에서 정한 문서 이력 워크플로우의 노드와 그래프(`src/mini_agent/document_history.py`), 안내 문구(`src/mini_agent/messages.py`), 그 테스트(`tests/test_document_history.py`) 작성을 AI에 요청했습니다. 단계를 나눠 단계마다 테스트를 먼저 쓰고, 통과하면 다음 단계로 넘어가도록 했습니다.
 
 ## 채택한 제안과 이유
 - (1) 제안: 과제 안내문을 바탕으로 작성한 요구사항 문서 초안

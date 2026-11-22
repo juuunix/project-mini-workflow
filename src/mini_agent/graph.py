@@ -36,7 +36,7 @@ LLM_RETRY_POLICY = RetryPolicy(
 )
 
 
-def build_graph(
+def build_agent_graph(
     model: BaseChatModel,
     search: DocumentSearch,
     llm_retry: RetryPolicy = LLM_RETRY_POLICY,

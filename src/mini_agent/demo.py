@@ -9,10 +9,10 @@ from rich.console import Console
 from rich.text import Text
 
 from mini_agent import messages
-from mini_agent.documents import build_document_graph
+from mini_agent.document_history import build_document_graph
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import LLM_RETRY_POLICY, build_graph
+from mini_agent.graph import LLM_RETRY_POLICY, build_agent_graph
 from mini_agent.log import Event, file_logging, log_event, log_run
 from mini_agent.report import not_run_report, run_report
 from mini_agent.result import RunResult
@@ -40,7 +40,7 @@ def run_demo(
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
     search = DocumentSearch.from_directory(docs_dir)
     graphs = {
-        Workflow.AGENT: build_graph(llm, search, llm_retry),
+        Workflow.AGENT: build_agent_graph(llm, search, llm_retry),
         Workflow.DOCUMENT_HISTORY: build_document_graph(search),
     }
 

@@ -3,7 +3,7 @@ from langchain_core.messages import HumanMessage
 
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import LLM_RETRY_POLICY, build_graph
+from mini_agent.graph import LLM_RETRY_POLICY, build_agent_graph
 from mini_agent.nodes import DATE_NODE, ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE
 from mini_agent.result import RecordKind, RunStatus
 from mini_agent.scenarios import (
@@ -42,7 +42,7 @@ def test_demo_question_follows_expected_path(name: str, search: DocumentSearch) 
     question, expected_path = SCENARIOS[name]
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
     no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
-    graph = build_graph(llm, search, llm_retry=no_wait)
+    graph = build_agent_graph(llm, search, llm_retry=no_wait)
 
     result = run_graph(
         graph, {"messages": [HumanMessage(question)]}, node_limits=DEMO_NODE_LIMITS
