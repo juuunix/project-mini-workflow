@@ -103,7 +103,8 @@ def step_rows(history: list[ExecutionRecord]) -> tuple[list[Row], str]:
             output = format_output(record.output)
         if record.kind is RecordKind.ERROR_HANDLER:
             move = f"{record.node} → {ERROR_HANDLING}"
-            rows.append((str(number), move, ERROR_HANDLING, record.node, "", output))
+            status = ERROR_HANDLING if record.succeeded else "실패"
+            rows.append((str(number), move, status, record.node, "", output))
             previous = ERROR_HANDLING
             continue
         counts[record.node] += 1

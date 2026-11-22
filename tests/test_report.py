@@ -49,6 +49,20 @@ def test_stopped_run_ends_with_stop_row() -> None:
     )
 
 
+def test_failed_error_handler_is_shown_as_failure() -> None:
+    failed = ExecutionRecord(
+        kind=RecordKind.NODE, node="llm", output={}, error="TimeoutError: 시간 초과"
+    )
+    handler = ExecutionRecord(
+        kind=RecordKind.ERROR_HANDLER, node="llm", output={}, error="KeyError: 'x'"
+    )
+    result = RunResult(history=[failed, handler], state={})
+
+    rows = table_rows(result)
+
+    assert rows[1] == ("2", "llm → 오류 처리", "실패", "llm", "", "KeyError: 'x'")
+
+
 def test_input_without_question_is_shown_as_keys_and_values() -> None:
     assert input_of({"topic": "배포"}) == ("입력", "topic: 배포")
 
