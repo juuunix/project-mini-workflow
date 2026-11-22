@@ -35,16 +35,15 @@ logger = logging.getLogger("mini_workflow.demo")
 def run_demo(
     console: Console, docs_dir: Path, llm_retry: RetryPolicy = LLM_RETRY_POLICY
 ) -> None:
-    """시나리오마다 그 워크플로우의 그래프를 실행하고, 모든 실행이 끝난 뒤 결과를 한꺼번에 출력한다.
-
-    실행하는 대로 출력하면 재시도로 기다리는 시나리오만 늦게 나타나 멈춘 것처럼 보인다.
-    """
+    # 1. 워크플로우별 그래프를 만들고, 모든 시나리오를 실행해 결과를 모은다.
     graphs = build_demo_graphs(DocumentSearch.from_directory(docs_dir), llm_retry)
 
     results = [
         run_scenario(graphs[scenario.workflow], number, scenario)
         for number, scenario in enumerate(DEMO_SCENARIOS, start=1)
     ]
+
+    # 2. 모든 실행이 끝난 뒤, 시나리오마다 제목과 실행 결과를 한꺼번에 출력한다.
     totals = Counter(scenario.workflow for scenario in DEMO_SCENARIOS)
     numbers: Counter[Workflow] = Counter()
     for scenario, result in zip(DEMO_SCENARIOS, results, strict=True):
