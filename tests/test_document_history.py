@@ -6,7 +6,6 @@ from mini_workflow.search import Collection, Document, DocumentSearch
 from mini_workflow.workflows.document_history.graph import build_document_graph
 from mini_workflow.workflows.document_history.nodes import (
     FIND_DOCUMENTS_NODE,
-    MAX_DOCUMENTS,
     NO_DOCUMENTS_NODE,
     READ_METADATA_NODE,
     WRITE_REPORT_NODE,
@@ -46,13 +45,27 @@ BAD_DATE_HEADER = (
 )
 
 
-def current_document(doc_id: str, title: str) -> Document:
-    return Document(
-        doc_id=doc_id,
-        title=title,
-        collection=Collection.CURRENT,
-        text=f"# {title}\n{title} 내용이다.",
-    )
+def search_with_four_deploy_documents() -> DocumentSearch:
+    deploy = [
+        document_with_header(
+            f"deploy-{n}",
+            f"배포 절차 {n}",
+            Collection.CURRENT,
+            f"- 문서 번호: TEC-{n}\n- 상태: 현행\n- 시행일: 2025-01-0{n + 1}",
+        )
+        for n in range(4)
+    ]
+    # 주제가 있는 문서가 컬렉션의 절반을 넘으면 BM25 점수가 0이 되므로 다른 문서를 더 둔다.
+    others = [
+        document_with_header(
+            f"leave-{n}",
+            f"휴가 안내 {n}",
+            Collection.CURRENT,
+            "- 문서 번호: POL-9\n- 상태: 현행\n- 시행일: 2025-01-01",
+        )
+        for n in range(5)
+    ]
+    return DocumentSearch([*deploy, *others, *unrelated_documents(Collection.ARCHIVE)])
 
 
 def test_find_documents_keeps_current_then_archive_documents(
@@ -69,24 +82,30 @@ def test_find_documents_keeps_current_then_archive_documents(
     ]
 
 
-def test_find_documents_keeps_at_most_max_documents() -> None:
-    archive = Document(
-        doc_id="old", title="옛 문서", collection=Collection.ARCHIVE, text="# 옛 문서"
+def test_find_documents_keeps_every_document_unless_limited() -> None:
+    search = search_with_four_deploy_documents()
+
+    unlimited = FindDocumentsNode(search)({"topic": "배포"})
+    limited = FindDocumentsNode(search, max_documents=3)({"topic": "배포"})
+
+    assert len(unlimited["documents"]) == 4
+    assert "omitted" not in unlimited
+    assert [doc.doc_id for doc in limited["documents"]] == [
+        "deploy-0",
+        "deploy-1",
+        "deploy-2",
+    ]
+    assert [doc.doc_id for doc in limited.get("omitted", [])] == ["deploy-3"]
+
+
+def test_report_lists_documents_omitted_by_limit() -> None:
+    graph = build_document_graph(search_with_four_deploy_documents(), max_documents=3)
+
+    result = run_graph(graph, {"topic": "배포"})
+
+    assert result.state["report"].endswith(
+        "문서 수 상한을 넘어 제외한 문서\n- 배포 절차 3 (deploy-3)"
     )
-    # BM25는 모든 문서에 있는 단어의 점수를 0으로 매기므로, 주제가 없는 문서를 더 많이 둔다.
-    matching = [
-        current_document(f"deploy-{n}", f"배포 절차 {n}")
-        for n in range(MAX_DOCUMENTS + 1)
-    ]
-    others = [
-        current_document(f"other-{n}", f"휴가 안내 {n}")
-        for n in range(MAX_DOCUMENTS + 2)
-    ]
-    node = FindDocumentsNode(DocumentSearch([*matching, *others, archive]))
-
-    update = node({"topic": "배포"})
-
-    assert len(update["documents"]) == MAX_DOCUMENTS
 
 
 def test_topic_without_documents_goes_find_then_no_documents(

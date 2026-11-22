@@ -85,6 +85,12 @@ def all_documents_skipped(topic: str, count: int) -> str:
     return f"'{topic}' 관련 문서 {count}건 모두 메타데이터를 읽지 못했습니다."
 
 
+def omitted_section(documents: list[str]) -> str:
+    return "\n".join(
+        ["문서 수 상한을 넘어 제외한 문서", *(f"- {doc}" for doc in documents)]
+    )
+
+
 def skipped_section(entries: list[str]) -> str:
     return "\n".join(["메타데이터를 읽지 못해 제외한 문서", *entries])
 

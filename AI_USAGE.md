@@ -43,6 +43,7 @@
 - (42) (41)에서 정한 문서 이력 워크플로우의 노드와 그래프(`src/mini_workflow/document_history.py`), 안내 문구(`src/mini_workflow/messages.py`), 그 테스트(`tests/test_document_history.py`) 작성을 AI에 요청했습니다. 단계를 나눠 단계마다 테스트를 먼저 쓰고, 통과하면 다음 단계로 넘어가도록 했습니다.
 - (43) 워크플로우가 두 개가 되면서, 이름과 파일 구성이 에이전트 하나를 전제로 되어 있어 구조 리팩터링을 AI에 요청했습니다. 시연 시나리오가 실행할 워크플로우와 첫 상태를 갖도록 시연(`src/mini_workflow/demo.py`, `src/mini_workflow/scenarios.py`)을 바꿨습니다. 패키지 이름 `mini_agent`도 워크플로우 엔진이라는 프로젝트 성격과 맞지 않다고 판단해 바꾸도록 요청했고, 워크플로우별 모듈을 `src/mini_workflow/workflows/`로 옮겼습니다. 로그 이벤트 이름(`src/mini_workflow/log.py`)도 두 워크플로우에 맞게 고쳤습니다.
 - (44) 문서 이력 워크플로우가 시연에 나오도록 시연 시나리오(`src/mini_workflow/scenarios.py`)에 주제 두 개를 추가하고, 시연 출력(`src/mini_workflow/report.py`, `src/mini_workflow/demo.py`)을 두 워크플로우에 맞게 고치는 작업과 그 테스트(`tests/test_report.py`, `tests/test_scenarios.py`, `tests/test_demo.py`) 작성을 AI에 요청했습니다. 시나리오 구분선에 워크플로우 이름이 함께 나오도록 요청했습니다.
+- (45) 리뷰에서 문서 수 상한(3건) 때문에 이력이 잘려도 정리 결과에 드러나지 않는다는 지적을 받고, 3건이 처음 요약 계획에서 그대로 넘어온 값임을 AI에 확인했습니다. 상한을 기본으로 두지 않되 설정할 수 있게 하고, 상한을 넘으면 정리 결과에 표시하도록 문서 이력 워크플로우(`src/mini_workflow/workflows/document_history/nodes.py`, `src/mini_workflow/workflows/document_history/graph.py`)와 그 테스트(`tests/test_document_history.py`)를 고치는 작업을 요청했습니다.
 
 ## 채택한 제안과 이유
 - (1) 제안: 과제 안내문을 바탕으로 작성한 요구사항 문서 초안
@@ -200,6 +201,9 @@
 - (44) 제안: 구분선에 워크플로우 이름과 그 워크플로우 안에서의 순번을 적습니다.
 - 채택 이유: 어느 워크플로우의 몇 번째 시나리오인지 바로 보여서입니다.
 
+- (45) 제안: 상한을 넘어 제외한 문서는 정리 결과에 목록으로 적습니다.
+- 채택 이유: 이력이 잘렸다는 사실을 숨기지 않아야 해서입니다.
+
 ## 기각한 제안과 이유
 - (3) 제안: Click, Loguru, 표준 logging, Blessed, prompt_toolkit 사용
 - 기각 이유: Click은 한글 열 정렬을 별도로 구현해야 했고, 나머지 후보는 이번 시연의 출력 구성에 필요한 기능과 구현 부담을 고려해 제외했습니다.
@@ -344,3 +348,6 @@
 
 - (43) 제안: 문서 이력 워크플로우는 `workflows/document_history.py` 한 파일로 둡니다.
 - 기각 이유: 에이전트 워크플로우와 형태를 맞추기 위해 폴더로 두고 파일을 나눴습니다.
+
+- (45) 제안: 상한을 10건으로 늘리고, 노드별 실행 횟수 상한과 짝을 맞춥니다.
+- 기각 이유: 10건이라는 숫자에도 근거가 약해, 기본 상한은 두지 않고 필요할 때 설정하도록 했습니다.

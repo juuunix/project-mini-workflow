@@ -16,9 +16,11 @@ from mini_workflow.workflows.document_history.nodes import (
 )
 
 
-def build_document_graph(search: DocumentSearch) -> CompiledStateGraph:
+def build_document_graph(
+    search: DocumentSearch, max_documents: int | None = None
+) -> CompiledStateGraph:
     builder = StateGraph(DocumentState)  # ty: ignore[invalid-argument-type]
-    builder.add_node(FIND_DOCUMENTS_NODE, FindDocumentsNode(search))
+    builder.add_node(FIND_DOCUMENTS_NODE, FindDocumentsNode(search, max_documents))
     builder.add_node(NO_DOCUMENTS_NODE, no_documents)
     builder.add_node(READ_METADATA_NODE, read_metadata)
     builder.add_node(WRITE_REPORT_NODE, write_report)

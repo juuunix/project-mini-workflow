@@ -14,8 +14,6 @@ NO_DOCUMENTS_NODE = "no_documents"
 READ_METADATA_NODE = "read_metadata"
 WRITE_REPORT_NODE = "write_report"
 
-MAX_DOCUMENTS = 3
-
 
 class SkippedDocument(TypedDict):
     doc_id: str
@@ -25,6 +23,7 @@ class SkippedDocument(TypedDict):
 class DocumentState(TypedDict):
     topic: str
     documents: NotRequired[list[Document]]
+    omitted: NotRequired[list[Document]]
     metadata: NotRequired[Annotated[list[DocumentMetadata], operator.add]]
     skipped: NotRequired[Annotated[list[SkippedDocument], operator.add]]
     report: NotRequired[str]
@@ -32,6 +31,7 @@ class DocumentState(TypedDict):
 
 class DocumentsUpdate(TypedDict):
     documents: list[Document]
+    omitted: NotRequired[list[Document]]
 
 
 class MetadataUpdate(TypedDict, total=False):
@@ -44,8 +44,11 @@ class ReportUpdate(TypedDict):
 
 
 class FindDocumentsNode:
-    def __init__(self, search: DocumentSearch) -> None:
+    def __init__(
+        self, search: DocumentSearch, max_documents: int | None = None
+    ) -> None:
         self._search = search
+        self._max_documents = max_documents
 
     def __call__(self, state: DocumentState) -> DocumentsUpdate:
         hits = [
@@ -53,7 +56,11 @@ class FindDocumentsNode:
             for collection in Collection
             for hit in self._search.search(state["topic"], collection)
         ]
-        return {"documents": [hit.document for hit in hits[:MAX_DOCUMENTS]]}
+        documents = [hit.document for hit in hits]
+        limit = self._max_documents
+        if limit is None or len(documents) <= limit:
+            return {"documents": documents}
+        return {"documents": documents[:limit], "omitted": documents[limit:]}
 
 
 def read_metadata(state: DocumentState) -> MetadataUpdate:
@@ -77,6 +84,12 @@ def write_report(state: DocumentState) -> ReportUpdate:
         parts = [heading, *history_sections(metadata), in_force_line(metadata)]
     else:
         parts = [messages.all_documents_skipped(state["topic"], len(skipped))]
+    if omitted := state.get("omitted"):
+        parts.append(
+            messages.omitted_section(
+                [messages.document_label(doc.title, doc.doc_id) for doc in omitted]
+            )
+        )
     if skipped:
         parts.append(
             messages.skipped_section(
