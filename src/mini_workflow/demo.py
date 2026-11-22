@@ -29,7 +29,7 @@ from mini_workflow.workflows.document_history.graph import build_document_graph
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("mini_workflow.demo")
 
 
 def run_demo(
