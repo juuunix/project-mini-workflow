@@ -1,6 +1,9 @@
+import logging
+
 import pytest
 
 from mini_workflow.engine import run_graph
+from mini_workflow.log import Event
 from mini_workflow.result import RunStatus
 from mini_workflow.search import Collection, Document, DocumentSearch
 from mini_workflow.workflows.document_history.graph import build_document_graph
@@ -192,13 +195,16 @@ def test_report_says_no_document_is_in_force_when_all_are_archived(
     ],
 )
 def test_read_metadata_skips_document_with_malformed_metadata(
-    header: str, reason: str
+    header: str, reason: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     document = document_with_header("doc", "문서", Collection.ARCHIVE, header)
 
     update = read_metadata({"topic": "문서", "documents": [document]})
 
     assert update == {"skipped": [{"doc_id": "doc", "reason": reason}]}
+    [warning] = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert getattr(warning, "event") == Event.METADATA_SKIPPED
+    assert getattr(warning, "data") == {"doc_id": "doc", "reason": reason}
 
 
 def test_report_lists_skipped_documents_after_history() -> None:

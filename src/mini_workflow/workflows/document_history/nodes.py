@@ -1,6 +1,8 @@
+import logging
 import operator
 from typing import Annotated, NotRequired, TypedDict
 
+from mini_workflow.log import Event, log_event
 from mini_workflow.search import Collection, Document, DocumentSearch
 from mini_workflow.workflows.document_history import messages
 from mini_workflow.workflows.document_history.metadata import (
@@ -13,6 +15,8 @@ FIND_DOCUMENTS_NODE = "find_documents"
 NO_DOCUMENTS_NODE = "no_documents"
 READ_METADATA_NODE = "read_metadata"
 WRITE_REPORT_NODE = "write_report"
+
+logger = logging.getLogger(__name__)
 
 
 class SkippedDocument(TypedDict):
@@ -68,7 +72,15 @@ def read_metadata(state: DocumentState) -> MetadataUpdate:
     try:
         metadata = parse_metadata(document)
     except ValueError as error:
-        return {"skipped": [{"doc_id": document.doc_id, "reason": str(error)}]}
+        reason = str(error)
+        log_event(
+            logger,
+            logging.WARNING,
+            Event.METADATA_SKIPPED,
+            doc_id=document.doc_id,
+            reason=reason,
+        )
+        return {"skipped": [{"doc_id": document.doc_id, "reason": reason}]}
     return {"metadata": [metadata]}
 
 

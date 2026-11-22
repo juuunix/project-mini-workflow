@@ -41,6 +41,7 @@ class Event(StrEnum):
     RUN_FINISHED = "run_finished"  # steps
     RUN_STOPPED = "run_stopped"  # kind, node, detail
     LLM_ATTEMPT_FAILED = "llm_attempt_failed"  # attempt, error
+    METADATA_SKIPPED = "metadata_skipped"  # doc_id, reason
 
 
 # 지금 실행 중인 질문의 번호. 시연이 정하고, 그동안 남는 모든 줄에 run으로 붙는다.

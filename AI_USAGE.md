@@ -45,6 +45,7 @@
 - (44) 문서 이력 워크플로우가 시연에 나오도록 시연 시나리오(`src/mini_workflow/scenarios.py`)에 주제 두 개를 추가하고, 시연 출력(`src/mini_workflow/report.py`, `src/mini_workflow/demo.py`)을 두 워크플로우에 맞게 고치는 작업과 그 테스트(`tests/test_report.py`, `tests/test_scenarios.py`, `tests/test_demo.py`) 작성을 AI에 요청했습니다. 시나리오 구분선에 워크플로우 이름이 함께 나오도록 요청했습니다.
 - (45) 리뷰에서 문서 수 상한(3건) 때문에 이력이 잘려도 정리 결과에 드러나지 않는다는 지적을 받고, 3건이 처음 요약 계획에서 그대로 넘어온 값임을 AI에 확인했습니다. 상한을 기본으로 두지 않되 설정할 수 있게 하고, 상한을 넘으면 정리 결과에 표시하도록 문서 이력 워크플로우(`src/mini_workflow/workflows/document_history/nodes.py`, `src/mini_workflow/workflows/document_history/graph.py`)와 그 테스트(`tests/test_document_history.py`)를 고치는 작업을 요청했습니다.
 - (46) 코드를 워크플로우별 폴더로 나눴는데 문구 모듈만 공용 하나에 두 워크플로우의 문구가 섞여 있어, 구조를 정리하는 김에 문구 모듈도 함께 나누는 것이 낫다고 판단했습니다. 문구가 쓰이는 곳을 AI에 확인받은 뒤, 공용 문구(`src/mini_workflow/messages.py`)와 워크플로우별 문구(`src/mini_workflow/workflows/agent/messages.py`, `src/mini_workflow/workflows/document_history/messages.py`)로 나누도록 요청했습니다.
+- (47) 추가한 문서 이력 워크플로우의 로그를 확인하다가, 형식이 틀려 건너뛴 문서가 경고로 남지 않고 노드 출력 안에만 남는 것을 보고, 이를 경고 로그로 남기도록 문서 이력 노드(`src/mini_workflow/workflows/document_history/nodes.py`)와 로그 이벤트(`src/mini_workflow/log.py`), 그 테스트(`tests/test_document_history.py`)를 고치는 작업을 AI에 요청했습니다.
 
 ## 채택한 제안과 이유
 - (1) 제안: 과제 안내문을 바탕으로 작성한 요구사항 문서 초안
@@ -204,6 +205,9 @@
 
 - (45) 제안: 상한을 넘어 제외한 문서는 정리 결과에 목록으로 적습니다.
 - 채택 이유: 이력이 잘렸다는 사실을 숨기지 않아야 해서입니다.
+
+- (47) 제안: 경고 로그는 형식이 틀려 건너뛴 문서에만 남기고, 문서 수 상한을 넘어 제외한 문서에는 남기지 않습니다.
+- 채택 이유: 상한을 넘는 것은 직접 정한 설정에 따른 동작이라 문서 데이터의 문제가 아니어서입니다.
 
 ## 기각한 제안과 이유
 - (3) 제안: Click, Loguru, 표준 logging, Blessed, prompt_toolkit 사용
