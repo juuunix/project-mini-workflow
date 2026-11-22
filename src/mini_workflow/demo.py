@@ -23,7 +23,7 @@ from mini_workflow.scenarios import (
 from mini_workflow.search import DocumentLoadError, DocumentSearch
 from mini_workflow.workflows.agent.fake_llm import FakeLLM
 from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY, build_agent_graph
-from mini_workflow.workflows.document_history import build_document_graph
+from mini_workflow.workflows.document_history.graph import build_document_graph
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
 

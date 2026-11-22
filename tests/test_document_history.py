@@ -3,14 +3,14 @@ import pytest
 from mini_workflow.engine import run_graph
 from mini_workflow.result import RunStatus
 from mini_workflow.search import Collection, Document, DocumentSearch
-from mini_workflow.workflows.document_history import (
+from mini_workflow.workflows.document_history.graph import build_document_graph
+from mini_workflow.workflows.document_history.nodes import (
     FIND_DOCUMENTS_NODE,
     MAX_DOCUMENTS,
     NO_DOCUMENTS_NODE,
     READ_METADATA_NODE,
     WRITE_REPORT_NODE,
     FindDocumentsNode,
-    build_document_graph,
     read_metadata,
 )
 
