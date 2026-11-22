@@ -48,5 +48,8 @@ DEMO_SCENARIOS = [
     *(document_history_scenario(topic) for topic in DEMO_TOPICS),
 ]
 
-# 정상 절차의 최대 횟수(검색 2번, LLM 3번, 메타데이터 읽기 3번)보다 크게 잡는다.
+# 메타데이터 읽기가 문서 수만큼 반복되므로, 시연은 문서 수에 상한을 둔다.
+DEMO_MAX_DOCUMENTS = 3
+
+# 정상 절차의 최대 횟수(검색 2번, LLM 3번, 메타데이터 읽기 DEMO_MAX_DOCUMENTS번)보다 크게 잡는다.
 DEMO_NODE_LIMITS = {SEARCH_NODE: 4, LLM_NODE: 5, READ_METADATA_NODE: 5}

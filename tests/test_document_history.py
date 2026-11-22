@@ -101,6 +101,14 @@ def test_find_documents_keeps_every_document_unless_limited() -> None:
     assert [doc.doc_id for doc in limited.get("omitted", [])] == ["deploy-3"]
 
 
+@pytest.mark.parametrize("max_documents", [0, -1])
+def test_find_documents_rejects_limit_below_one(
+    search: DocumentSearch, max_documents: int
+) -> None:
+    with pytest.raises(ValueError, match=str(max_documents)):
+        FindDocumentsNode(search, max_documents=max_documents)
+
+
 def test_report_lists_documents_omitted_by_limit() -> None:
     graph = build_document_graph(search_with_four_deploy_documents(), max_documents=3)
 

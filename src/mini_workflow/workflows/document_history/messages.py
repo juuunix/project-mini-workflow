@@ -2,6 +2,10 @@ def no_documents_found(topic: str) -> str:
     return f"현행 문서와 보관 문서에서 '{topic}' 주제의 문서를 찾지 못했습니다."
 
 
+def invalid_max_documents(max_documents: int) -> str:
+    return f"문서 수 상한은 1 이상이어야 합니다: {max_documents}"
+
+
 def missing_metadata(key: str) -> str:
     return f"'{key}' 항목이 없습니다."
 

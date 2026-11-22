@@ -15,6 +15,7 @@ from mini_workflow.log import Event, file_logging, log_event, log_run
 from mini_workflow.report import not_run_report, run_report
 from mini_workflow.result import RunResult
 from mini_workflow.scenarios import (
+    DEMO_MAX_DOCUMENTS,
     DEMO_NODE_LIMITS,
     DEMO_SCENARIOS,
     TIMEOUT_QUESTION,
@@ -65,7 +66,9 @@ def build_demo_graphs(
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
     return {
         Workflow.AGENT: build_agent_graph(llm, search, llm_retry),
-        Workflow.DOCUMENT_HISTORY: build_document_graph(search),
+        Workflow.DOCUMENT_HISTORY: build_document_graph(
+            search, max_documents=DEMO_MAX_DOCUMENTS
+        ),
     }
 
 

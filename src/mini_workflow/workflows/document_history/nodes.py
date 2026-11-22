@@ -51,6 +51,8 @@ class FindDocumentsNode:
     def __init__(
         self, search: DocumentSearch, max_documents: int | None = None
     ) -> None:
+        if max_documents is not None and max_documents < 1:
+            raise ValueError(messages.invalid_max_documents(max_documents))
         self._search = search
         self._max_documents = max_documents
 
