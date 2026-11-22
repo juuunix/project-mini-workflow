@@ -17,30 +17,30 @@
 - (16) 엔진(`src/mini_workflow/engine.py`)의 반복문에 조건문이 쌓여 읽기 어려워져, 종료 이벤트를 실행 기록으로 바꾸는 부분을 함수로 분리하는 리팩터링을 AI에 지시했습니다.
 - (17) `experiments/rag-search/`의 비교 실험에서 고른 방식(문자 2-gram 토큰화, `rank-bm25`)으로 문서 검색 기능(`src/mini_workflow/search.py`)과 그 테스트(`tests/test_search.py`) 작성을 AI에 요청했습니다.
 - (18) 문서 검색(`src/mini_workflow/search.py`)에 관련 문서 판정 기준을 추가하는 수정과 그 테스트(`tests/test_search.py`) 작성을 AI에 요청했습니다. 처음 구현을 검토하면서 재사용성과 확장성이 부족하다고 보고, 구조를 다시 나누도록 요청했습니다.
-- (19) 가짜 LLM(`src/mini_workflow/fake_llm.py`)과 그 테스트(`tests/test_fake_llm.py`) 작성을 AI에 요청했습니다. 처음 구현을 검토하면서 도구가 늘어날 경우를 고려하도록 수정을 요청했습니다.
-- (20) LLM 노드, RAG 검색 노드, 오류 안내 노드와 오류 처리기(`src/mini_workflow/nodes.py`), 그 테스트(`tests/test_nodes.py`) 작성을 AI에 요청했습니다. 검색 노드를 LangGraph의 `ToolNode`로 바꾸자는 제안을 받고, 먼저 동작을 확인한 뒤 과제 요구사항과 다시 비교해 결정했습니다.
+- (19) 가짜 LLM(`src/mini_workflow/workflows/agent/fake_llm.py`)과 그 테스트(`tests/test_fake_llm.py`) 작성을 AI에 요청했습니다. 처음 구현을 검토하면서 도구가 늘어날 경우를 고려하도록 수정을 요청했습니다.
+- (20) LLM 노드, RAG 검색 노드, 오류 안내 노드와 오류 처리기(`src/mini_workflow/workflows/agent/nodes.py`), 그 테스트(`tests/test_nodes.py`) 작성을 AI에 요청했습니다. 검색 노드를 LangGraph의 `ToolNode`로 바꾸자는 제안을 받고, 먼저 동작을 확인한 뒤 과제 요구사항과 다시 비교해 결정했습니다.
 - (21) 테스트 코드(`tests/`)의 중복을 정리하는 리팩터링을 AI에 요청했습니다.
-- (22) 시연 그래프 조립(`src/mini_workflow/graph.py`)과 실행 기록을 글로 바꾸는 출력(`src/mini_workflow/report.py`), 그 테스트(`tests/test_graph.py`) 작성을 AI에 요청했습니다. 처음 구현을 검토하면서 도구가 늘어날 경우를 고려해 LLM 노드 다음의 조건부 연결을 고치도록 요청했습니다.
-- (23) LLM 노드에 재시도를 지정하고 시도 횟수를 오류 안내까지 전하는 수정(`src/mini_workflow/graph.py`, `src/mini_workflow/nodes.py`)과 그 테스트(`tests/test_graph.py`, `tests/test_nodes.py`) 작성을 AI에 요청했습니다.
+- (22) 시연 그래프 조립(`src/mini_workflow/workflows/agent/graph.py`)과 실행 기록을 글로 바꾸는 출력(`src/mini_workflow/report.py`), 그 테스트(`tests/test_graph.py`) 작성을 AI에 요청했습니다. 처음 구현을 검토하면서 도구가 늘어날 경우를 고려해 LLM 노드 다음의 조건부 연결을 고치도록 요청했습니다.
+- (23) LLM 노드에 재시도를 지정하고 시도 횟수를 오류 안내까지 전하는 수정(`src/mini_workflow/workflows/agent/graph.py`, `src/mini_workflow/workflows/agent/nodes.py`)과 그 테스트(`tests/test_graph.py`, `tests/test_nodes.py`) 작성을 AI에 요청했습니다.
 - (24) 기능 구현이 쌓인 뒤 리팩터링이 필요한 곳이 있는지 AI에 검토를 요청하고, 제안 중 두 가지를 적용하도록 지시했습니다.
 - (25) 시연 입력과 설정(`src/mini_workflow/scenarios.py`)을 정하고, 시연 시나리오 5개가 예상 경로대로 실행되는지 확인하는 테스트(`tests/test_scenarios.py`) 작성을 AI에 요청했습니다.
 - (26) 시연을 명령 하나로 실행하는 시연 모듈(`src/mini_workflow/demo.py`)과 실행 명령 등록(`pyproject.toml`), 그 테스트(`tests/test_demo.py`) 작성을 AI에 요청했습니다.
 - (27) 실행 기록을 시연 출력으로 보여 주는 모듈(`src/mini_workflow/report.py`, `src/mini_workflow/demo.py`)과 그 테스트(`tests/test_report.py`, `tests/test_graph.py`) 작성을 AI에 요청했습니다. 출력 모양을 먼저 함께 그려 본 뒤 구현했고, 구현을 검토하면서 여러 차례 고치도록 요청했습니다.
-- (28) 조건 분기를 더 분명하게 보여 주고 도구를 추가하는 과정을 직접 확인하려고, 첫 시연 질문을 "오늘 날짜 알려줘"로 바꾸고 날짜 도구 노드(`src/mini_workflow/nodes.py`)를 추가하는 작업을 AI에 요청했습니다. 결과를 검토하면서 도구 노드가 돌려주는 값의 모양도 고치도록 요청했습니다.
-- (29) 시연 출력에 대한 리뷰 지적(실행 횟수와 시도 횟수가 어긋나 보임, 오류 처리로 끝난 실행이 그냥 성공으로 보임, 좁은 터미널에서 출력이 잘림, 루프의 종료 조건이 드러나지 않음)을 AI와 함께 검토하고, 출력(`src/mini_workflow/report.py`)과 가짜 LLM(`src/mini_workflow/fake_llm.py`)을 고치도록 요청했습니다.
-- (30) 도구를 하나 추가하려면 그래프 조립 코드의 세 군데를 고쳐야 하는 것으로 보여, 도구 노드를 표 하나로 등록하도록 그래프 조립(`src/mini_workflow/graph.py`)을 고치는 작업을 AI에 요청했습니다.
-- (31) 검색 노드가 문서 제목만 돌려주고 답변에는 문서 본문이 쓰이지 않아 검색 증강 답변이라 보기 어렵다고 판단해, 검색 노드가 답의 근거가 될 본문을 넘기고 가짜 LLM이 그 본문과 참고 문서로 답하도록 문서 검색(`src/mini_workflow/search.py`), 검색 노드(`src/mini_workflow/nodes.py`), 가짜 LLM(`src/mini_workflow/fake_llm.py`)을 고치는 작업을 AI에 요청했습니다. 뽑힌 본문이 질문과 맞지 않던 웰니스 포인트 시연 질문은 본문으로 답할 수 있는 질문으로 바꿨습니다.
+- (28) 조건 분기를 더 분명하게 보여 주고 도구를 추가하는 과정을 직접 확인하려고, 첫 시연 질문을 "오늘 날짜 알려줘"로 바꾸고 날짜 도구 노드(`src/mini_workflow/workflows/agent/nodes.py`)를 추가하는 작업을 AI에 요청했습니다. 결과를 검토하면서 도구 노드가 돌려주는 값의 모양도 고치도록 요청했습니다.
+- (29) 시연 출력에 대한 리뷰 지적(실행 횟수와 시도 횟수가 어긋나 보임, 오류 처리로 끝난 실행이 그냥 성공으로 보임, 좁은 터미널에서 출력이 잘림, 루프의 종료 조건이 드러나지 않음)을 AI와 함께 검토하고, 출력(`src/mini_workflow/report.py`)과 가짜 LLM(`src/mini_workflow/workflows/agent/fake_llm.py`)을 고치도록 요청했습니다.
+- (30) 도구를 하나 추가하려면 그래프 조립 코드의 세 군데를 고쳐야 하는 것으로 보여, 도구 노드를 표 하나로 등록하도록 그래프 조립(`src/mini_workflow/workflows/agent/graph.py`)을 고치는 작업을 AI에 요청했습니다.
+- (31) 검색 노드가 문서 제목만 돌려주고 답변에는 문서 본문이 쓰이지 않아 검색 증강 답변이라 보기 어렵다고 판단해, 검색 노드가 답의 근거가 될 본문을 넘기고 가짜 LLM이 그 본문과 참고 문서로 답하도록 문서 검색(`src/mini_workflow/search.py`), 검색 노드(`src/mini_workflow/workflows/agent/nodes.py`), 가짜 LLM(`src/mini_workflow/workflows/agent/fake_llm.py`)을 고치는 작업을 AI에 요청했습니다. 뽑힌 본문이 질문과 맞지 않던 웰니스 포인트 시연 질문은 본문으로 답할 수 있는 질문으로 바꿨습니다.
 - (32) 노드 밖에서 발생한 오류는 엔진이 실패 결과로 바꾸지 않고 호출한 쪽으로 다시 던지는데, 시연에서 이 예외를 처리하지 않아 질문 하나의 오류로 시연 전체가 중단될 수 있었습니다. 질문마다 예외를 받아 "실행하지 못함"으로 표시하고 다음 질문을 계속 실행하도록 시연 실행(`src/mini_workflow/demo.py`)과 출력(`src/mini_workflow/report.py`)을 고치는 작업을 AI에 요청했습니다.
-- (33) 시연 화면은 실행 흐름만 보여 주고 기록이 남지 않아, 나중에 원인을 찾을 수 있도록 실행 기록을 텍스트 파일에 남기는 작업을 AI에 요청했습니다. 엔진(`src/mini_workflow/engine.py`), 노드(`src/mini_workflow/nodes.py`), 시연(`src/mini_workflow/demo.py`)에 기록을 넣고, 로그 형식과 파일 설정은 별도 모듈(`src/mini_workflow/log.py`)로 나눴습니다. 함께 그래프 밖의 오류 가능성을 점검해, 시연 시작 단계에서 문서를 읽지 못하면 traceback 대신 한 줄로 알리고 끝내도록 문서 검색(`src/mini_workflow/search.py`)과 시연을 고쳤습니다.
+- (33) 시연 화면은 실행 흐름만 보여 주고 기록이 남지 않아, 나중에 원인을 찾을 수 있도록 실행 기록을 텍스트 파일에 남기는 작업을 AI에 요청했습니다. 엔진(`src/mini_workflow/engine.py`), 노드(`src/mini_workflow/workflows/agent/nodes.py`), 시연(`src/mini_workflow/demo.py`)에 기록을 넣고, 로그 형식과 파일 설정은 별도 모듈(`src/mini_workflow/log.py`)로 나눴습니다. 함께 그래프 밖의 오류 가능성을 점검해, 시연 시작 단계에서 문서를 읽지 못하면 traceback 대신 한 줄로 알리고 끝내도록 문서 검색(`src/mini_workflow/search.py`)과 시연을 고쳤습니다.
 - (34) 평가 환경인 Windows에서 Python과 uv를 설치하지 않고 Docker만으로 시연과 테스트를 실행할 수 있도록, Docker 이미지 설정(`Dockerfile`, `.dockerignore`) 작성을 AI에 요청했습니다.
 - (35) 로그 파일을 열 수 없으면 시연이 시작되지 않는 문제를 확인하고, 로그 없이 시연을 계속하도록 로그 설정(`src/mini_workflow/log.py`)을 고치는 작업을 AI에 요청했습니다.
-- (36) 리팩터링할 곳을 AI에 다시 검토받았고, 도구 이름과 요청·결과 형식이 여러 파일에 흩어져 있다는 지적을 받았습니다. 이 정의를 한 파일(`src/mini_workflow/tools.py`)로 모으는 수정을 요청했습니다.
+- (36) 리팩터링할 곳을 AI에 다시 검토받았고, 도구 이름과 요청·결과 형식이 여러 파일에 흩어져 있다는 지적을 받았습니다. 이 정의를 한 파일(`src/mini_workflow/workflows/agent/tools.py`)로 모으는 수정을 요청했습니다.
 - (37) 아키텍처 문서(`docs/architecture.md`)가 현재 코드와 다른 곳을 AI에 찾아 달라고 요청했고, 그중 날짜 조회 노드가 빠진 부분(구성 요소, 상태, 오류 처리, 가짜 LLM 규칙, 시연 그래프와 시나리오)을 먼저 반영했습니다.
 - (38) (37)에서 찾은 나머지 차이를 아키텍처 문서(`docs/architecture.md`)에 반영했습니다. 문서를 쓴 뒤 바뀐 동작(실행 방식, 실패 정보, 근거 구절, 출력 모양)과 실제보다 넓게 적힌 예외 처리 설명을 고치고, 문서에 없던 로그를 구성 요소 표에 더했습니다. 고친 문장 중 어색한 곳은 다시 다듬도록 요청했습니다.
 - (39) 엔진의 예외 처리가 올바르게 동작하는지 AI에 검증을 요청했고, 노드가 던진 `GraphRecursionError`를 전체 단계 수 상한 초과로 잘못 기록하는 문제를 찾아 엔진(`src/mini_workflow/engine.py`)을 고쳤습니다.
 - (40) Docker 이미지가 847MB로 커서 무엇이 공간을 차지하는지 AI에 확인을 요청했고, uv 다운로드 캐시와 코드 검사 도구가 들어 있는 것을 보고 이를 빼도록 요청했습니다. 이어서 Debian slim 대신 Alpine 기반 이미지로 시험해 보게 하고, 테스트와 시연이 통과하는 것을 확인한 뒤 바꿨습니다. Docker 이미지 설정(`Dockerfile`)과 패키지 묶음(`pyproject.toml`, `uv.lock`)을 고쳐 이미지를 359MB로 줄였습니다.
 - (41) 과제 안내문을 다시 보고, 지금 구조가 에이전트 하나에 너무 묶여 있고 과제는 n8n처럼 여러 워크플로우를 실행하는 엔진에 가깝다고 판단했습니다. 이에 맞게 구조를 바꾸는 방향에 대해 AI의 의견을 묻고, 정한 방향을 아키텍처 문서(`docs/architecture.md`)에 반영하도록 요청했습니다.
-- (42) (41)에서 정한 문서 이력 워크플로우의 노드와 그래프(`src/mini_workflow/document_history.py`), 안내 문구(`src/mini_workflow/messages.py`), 그 테스트(`tests/test_document_history.py`) 작성을 AI에 요청했습니다. 단계를 나눠 단계마다 테스트를 먼저 쓰고, 통과하면 다음 단계로 넘어가도록 했습니다.
+- (42) (41)에서 정한 문서 이력 워크플로우의 노드와 그래프(`src/mini_workflow/workflows/document_history/`), 안내 문구(`src/mini_workflow/workflows/document_history/messages.py`), 그 테스트(`tests/test_document_history.py`) 작성을 AI에 요청했습니다. 단계를 나눠 단계마다 테스트를 먼저 쓰고, 통과하면 다음 단계로 넘어가도록 했습니다.
 - (43) 워크플로우가 두 개가 되면서, 이름과 파일 구성이 에이전트 하나를 전제로 되어 있어 구조 리팩터링을 AI에 요청했습니다. 시연 시나리오가 실행할 워크플로우와 첫 상태를 갖도록 시연(`src/mini_workflow/demo.py`, `src/mini_workflow/scenarios.py`)을 바꿨습니다. 패키지 이름 `mini_agent`도 워크플로우 엔진이라는 프로젝트 성격과 맞지 않다고 판단해 바꾸도록 요청했고, 워크플로우별 모듈을 `src/mini_workflow/workflows/`로 옮겼습니다. 로그 이벤트 이름(`src/mini_workflow/log.py`)도 두 워크플로우에 맞게 고쳤습니다.
 - (44) 문서 이력 워크플로우가 시연에 나오도록 시연 시나리오(`src/mini_workflow/scenarios.py`)에 주제 두 개를 추가하고, 시연 출력(`src/mini_workflow/report.py`, `src/mini_workflow/demo.py`)을 두 워크플로우에 맞게 고치는 작업과 그 테스트(`tests/test_report.py`, `tests/test_scenarios.py`, `tests/test_demo.py`) 작성을 AI에 요청했습니다. 시나리오 구분선에 워크플로우 이름이 함께 나오도록 요청했습니다.
 - (45) 리뷰에서 문서 수 상한(3건) 때문에 이력이 잘려도 정리 결과에 드러나지 않는다는 지적을 받고, 3건이 처음 요약 계획에서 그대로 넘어온 값임을 AI에 확인했습니다. 상한을 기본으로 두지 않되 설정할 수 있게 하고, 상한을 넘으면 정리 결과에 표시하도록 문서 이력 워크플로우(`src/mini_workflow/workflows/document_history/nodes.py`, `src/mini_workflow/workflows/document_history/graph.py`)와 그 테스트(`tests/test_document_history.py`)를 고치는 작업을 요청했습니다.
@@ -135,7 +135,7 @@
 - (24) 제안: 오류 원인 문구를 만드는 함수를 엔진 모듈(`src/mini_workflow/engine.py`)에서 `src/mini_workflow/messages.py`로 옮겨, 노드 모듈이 엔진 모듈을 가져오지 않게 합니다.
 - 채택 이유: 엔진은 노드를 모르게 설계했는데, 문구 함수 하나 때문에 노드가 엔진에 기대고 있었습니다.
 
-- (24) 제안: LLM 노드 다음 경로를 정하는 함수(`src/mini_workflow/graph.py`)가 도구 요청을 직접 읽지 않고, 노드 모듈의 `tool_calls_of`를 재사용합니다.
+- (24) 제안: LLM 노드 다음 경로를 정하는 함수(`src/mini_workflow/workflows/agent/graph.py`)가 도구 요청을 직접 읽지 않고, 노드 모듈의 `tool_calls_of`를 재사용합니다.
 - 채택 이유: 같은 판단이 두 곳에 있으면 한쪽만 고쳐질 수 있어 한 곳으로 모았습니다.
 
 - (25) 제안: 시연 질문 5개와 시간 초과 질문, 노드별 상한을 한 파일에 모으고, 테스트는 질문마다 하나의 그래프로 실행해 경로가 예상과 같은지 확인합니다.
@@ -171,7 +171,7 @@
 - (35) 제안: 로그 파일을 열지 못하면 화면에 한 줄로 알리고, 로그 없이 시연을 실행합니다.
 - 채택 이유: 로그는 원인을 찾기 위한 보조 기능이라, 기록하지 못했다고 워크플로우 실행까지 막을 필요는 없다고 판단해서입니다.
 
-- (36) 제안: 도구 이름, 검색 요청 인자, 검색·날짜 결과의 타입을 `src/mini_workflow/tools.py`에 모으고, 노드와 가짜 LLM이 이 파일을 가져다 씁니다.
+- (36) 제안: 도구 이름, 검색 요청 인자, 검색·날짜 결과의 타입을 `src/mini_workflow/workflows/agent/tools.py`에 모으고, 노드와 가짜 LLM이 이 파일을 가져다 씁니다.
 - 채택 이유: 날짜 결과는 타입 없이 `"date"`라는 키로만 이어져 있었고, 가짜 LLM이 도구 이름 하나 때문에 노드 모듈을 가져오고 있었습니다.
 
 - (37) 제안: 문서 검색과 날짜 조회를 "도구 노드"로 묶어 부르고, 각 절에 날짜 조회 노드를 더합니다.
