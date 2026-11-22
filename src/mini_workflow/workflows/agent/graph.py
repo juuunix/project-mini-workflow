@@ -42,7 +42,6 @@ def build_agent_graph(
     llm_retry: RetryPolicy = LLM_RETRY_POLICY,
     today: Callable[[], date] = date.today,
 ) -> CompiledStateGraph:
-    """시연 그래프. LLM이 도구를 요청하면 그 도구의 노드를 거쳐 다시 LLM으로 돌아온다."""
     # 도구 이름 → (노드 이름, 노드). 도구를 추가하면 여기에 한 줄을 더한다.
     # 노드 등록, LLM으로 돌아가는 연결, 조건부 연결의 갈 곳은 이 표에서 만든다.
     # 가짜 LLM을 쓰는 동안에는 그 도구를 언제 요청할지 FakeLLM에도 규칙을 더해야 한다.

@@ -30,9 +30,9 @@ PACKAGE_LOGGER = "mini_workflow"
 class Event(StrEnum):
     """로그에 남기는 이벤트와 그 data의 칸."""
 
-    QUESTION_START = "question_start"  # question
-    QUESTION_END = "question_end"  # status
-    QUESTION_CRASHED = "question_crashed"  # question, error, traceback
+    SCENARIO_START = "scenario_start"  # scenario
+    SCENARIO_END = "scenario_end"  # status
+    SCENARIO_CRASHED = "scenario_crashed"  # scenario, error, traceback
     DOCS_LOAD_FAILED = "docs_load_failed"  # docs_dir, error, traceback
     NODE_START = "node_start"  # node, node_run
     NODE_END = "node_end"  # node, output

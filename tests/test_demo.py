@@ -74,8 +74,8 @@ def test_unexpected_error_in_one_question_does_not_stop_demo(
     assert DEMO_QUESTIONS[-1] in output
     # 화면에는 한 줄만 보이고, 원인을 찾을 traceback은 로그에 남는다.
     [error] = [r for r in caplog.records if r.levelno == logging.ERROR]
-    assert getattr(error, "event") == Event.QUESTION_CRASHED
-    assert getattr(error, "data")["question"] == broken_question
+    assert getattr(error, "event") == Event.SCENARIO_CRASHED
+    assert getattr(error, "data")["scenario"] == broken_question
     assert error.exc_info is not None
 
 
@@ -93,7 +93,7 @@ def test_main_writes_log_file(
     lines = [json.loads(line) for line in log.splitlines()]
     # 모든 줄이 같은 바깥 칸을 가지고, 질문 번호가 붙는다.
     assert all(line.keys() == LOG_LINE_KEYS for line in lines)
-    assert (lines[0]["run"], lines[0]["event"]) == (1, Event.QUESTION_START)
+    assert (lines[0]["run"], lines[0]["event"]) == (1, Event.SCENARIO_START)
     # 노드 출력이 원본 그대로 남는다. JSON 변환이 깨지면 이 글자가 없다.
     assert "search_documents" in log
 

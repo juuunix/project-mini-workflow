@@ -63,7 +63,7 @@ def run_scenario(
     graph: CompiledStateGraph, number: int, scenario: Scenario
 ) -> RunResult | Exception:
     with log_run(number):
-        log_event(logger, logging.INFO, Event.QUESTION_START, question=scenario.label)
+        log_event(logger, logging.INFO, Event.SCENARIO_START, scenario=scenario.label)
         try:
             result = run_graph(
                 graph, scenario.initial_state, node_limits=DEMO_NODE_LIMITS
@@ -72,13 +72,13 @@ def run_scenario(
             log_event(
                 logger,
                 logging.ERROR,
-                Event.QUESTION_CRASHED,
+                Event.SCENARIO_CRASHED,
                 exc_info=True,
-                question=scenario.label,
+                scenario=scenario.label,
                 error=messages.error_reason(error),
             )
             return error
-        log_event(logger, logging.INFO, Event.QUESTION_END, status=result.status)
+        log_event(logger, logging.INFO, Event.SCENARIO_END, status=result.status)
         return result
 
 
