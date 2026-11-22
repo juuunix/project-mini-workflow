@@ -3,20 +3,26 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import RetryPolicy
 from rich.console import Console
 from rich.text import Text
 
 from mini_agent import messages
+from mini_agent.documents import build_document_graph
 from mini_agent.engine import run_graph
 from mini_agent.fake_llm import FakeLLM
 from mini_agent.graph import LLM_RETRY_POLICY, build_graph
 from mini_agent.log import Event, file_logging, log_event, log_run
 from mini_agent.report import not_run_report, run_report
 from mini_agent.result import RunResult
-from mini_agent.scenarios import DEMO_NODE_LIMITS, DEMO_QUESTIONS, TIMEOUT_QUESTION
+from mini_agent.scenarios import (
+    DEMO_NODE_LIMITS,
+    DEMO_SCENARIOS,
+    TIMEOUT_QUESTION,
+    Scenario,
+    Workflow,
+)
 from mini_agent.search import DocumentLoadError, DocumentSearch
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
@@ -27,38 +33,40 @@ logger = logging.getLogger(__name__)
 def run_demo(
     console: Console, docs_dir: Path, llm_retry: RetryPolicy = LLM_RETRY_POLICY
 ) -> None:
-    """시연 질문마다 같은 그래프를 실행하고, 모든 실행이 끝난 뒤 결과를 한꺼번에 출력한다.
+    """시나리오마다 그 워크플로우의 그래프를 실행하고, 모든 실행이 끝난 뒤 결과를 한꺼번에 출력한다.
 
     실행하는 대로 출력하면 재시도로 기다리는 시나리오만 늦게 나타나 멈춘 것처럼 보인다.
     """
     llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
-    graph = build_graph(llm, DocumentSearch.from_directory(docs_dir), llm_retry)
+    search = DocumentSearch.from_directory(docs_dir)
+    graphs = {
+        Workflow.AGENT: build_graph(llm, search, llm_retry),
+        Workflow.DOCUMENT_HISTORY: build_document_graph(search),
+    }
 
     results = [
-        run_question(graph, number, question)
-        for number, question in enumerate(DEMO_QUESTIONS, start=1)
+        run_scenario(graphs[scenario.workflow], number, scenario)
+        for number, scenario in enumerate(DEMO_SCENARIOS, start=1)
     ]
-    for number, (question, result) in enumerate(
-        zip(DEMO_QUESTIONS, results, strict=True), start=1
+    for number, (scenario, result) in enumerate(
+        zip(DEMO_SCENARIOS, results, strict=True), start=1
     ):
         console.rule(Text(f"[{number}/{len(results)}]"))
         if isinstance(result, RunResult):
             console.print(run_report(result))
         else:
-            console.print(not_run_report(question, result))
+            console.print(not_run_report(scenario.label, result))
         console.print()
 
 
-def run_question(
-    graph: CompiledStateGraph, number: int, question: str
+def run_scenario(
+    graph: CompiledStateGraph, number: int, scenario: Scenario
 ) -> RunResult | Exception:
     with log_run(number):
-        log_event(logger, logging.INFO, Event.QUESTION_START, question=question)
+        log_event(logger, logging.INFO, Event.QUESTION_START, question=scenario.label)
         try:
             result = run_graph(
-                graph,
-                {"messages": [HumanMessage(question)]},
-                node_limits=DEMO_NODE_LIMITS,
+                graph, scenario.initial_state, node_limits=DEMO_NODE_LIMITS
             )
         except Exception as error:
             log_event(
@@ -66,7 +74,7 @@ def run_question(
                 logging.ERROR,
                 Event.QUESTION_CRASHED,
                 exc_info=True,
-                question=question,
+                question=scenario.label,
                 error=messages.error_reason(error),
             )
             return error
