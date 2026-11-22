@@ -96,7 +96,7 @@ def run_scenario(
 
 
 def main(argv: Sequence[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="미니 에이전트 시연")
+    parser = argparse.ArgumentParser(description="미니 워크플로우 시연")
     parser.add_argument(
         "--docs-dir",
         type=Path,
