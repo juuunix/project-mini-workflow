@@ -1,5 +1,5 @@
-import mini_agent
+import mini_workflow
 
 
 def test_import() -> None:
-    assert mini_agent is not None
+    assert mini_workflow is not None

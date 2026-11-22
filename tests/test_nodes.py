@@ -12,8 +12,8 @@ from langchain_core.messages import (
 from langgraph.errors import NodeError
 from langgraph.runtime import ExecutionInfo, Runtime
 
-from mini_agent.fake_llm import FakeLLM
-from mini_agent.nodes import (
+from mini_workflow.fake_llm import FakeLLM
+from mini_workflow.nodes import (
     DATE_NODE,
     ERROR_GUIDE_NODE,
     LLM_NODE,
@@ -28,8 +28,8 @@ from mini_agent.nodes import (
     record_attempt,
     tool_error_handler,
 )
-from mini_agent.search import Collection, DocumentSearch, SearchHit
-from mini_agent.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME
+from mini_workflow.search import Collection, DocumentSearch, SearchHit
+from mini_workflow.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME
 
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
 

@@ -1,17 +1,17 @@
 import pytest
 from langchain_core.messages import HumanMessage
 
-from mini_agent.engine import run_graph
-from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import LLM_RETRY_POLICY, build_agent_graph
-from mini_agent.nodes import DATE_NODE, ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE
-from mini_agent.result import RecordKind, RunStatus
-from mini_agent.scenarios import (
+from mini_workflow.engine import run_graph
+from mini_workflow.fake_llm import FakeLLM
+from mini_workflow.graph import LLM_RETRY_POLICY, build_agent_graph
+from mini_workflow.nodes import DATE_NODE, ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE
+from mini_workflow.result import RecordKind, RunStatus
+from mini_workflow.scenarios import (
     DEMO_NODE_LIMITS,
     DEMO_QUESTIONS,
     TIMEOUT_QUESTION,
 )
-from mini_agent.search import DocumentSearch
+from mini_workflow.search import DocumentSearch
 
 ERROR_HANDLING = f"오류 처리:{LLM_NODE}"
 SEARCH_TWICE = [LLM_NODE, SEARCH_NODE, LLM_NODE, SEARCH_NODE, LLM_NODE]

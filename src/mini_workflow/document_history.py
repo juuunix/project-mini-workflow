@@ -5,8 +5,8 @@ from typing import Annotated, NotRequired, TypedDict
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from mini_agent import messages
-from mini_agent.search import Collection, Document, DocumentSearch
+from mini_workflow import messages
+from mini_workflow.search import Collection, Document, DocumentSearch
 
 FIND_DOCUMENTS_NODE = "find_documents"
 NO_DOCUMENTS_NODE = "no_documents"

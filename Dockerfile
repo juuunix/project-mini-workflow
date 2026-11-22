@@ -18,4 +18,4 @@ COPY data ./data
 COPY tests ./tests
 RUN uv sync --frozen --no-default-groups --group test
 
-CMD ["mini-agent-demo"]
+CMD ["mini-workflow-demo"]

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.search import DocumentSearch
+from mini_workflow.search import DocumentSearch
 
 
 @pytest.fixture(scope="session")

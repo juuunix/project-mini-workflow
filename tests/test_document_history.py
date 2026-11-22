@@ -1,6 +1,6 @@
 import pytest
 
-from mini_agent.document_history import (
+from mini_workflow.document_history import (
     FIND_DOCUMENTS_NODE,
     MAX_DOCUMENTS,
     NO_DOCUMENTS_NODE,
@@ -10,9 +10,9 @@ from mini_agent.document_history import (
     build_document_graph,
     read_metadata,
 )
-from mini_agent.engine import run_graph
-from mini_agent.result import RunStatus
-from mini_agent.search import Collection, Document, DocumentSearch
+from mini_workflow.engine import run_graph
+from mini_workflow.result import RunStatus
+from mini_workflow.search import Collection, Document, DocumentSearch
 
 
 def document_with_header(

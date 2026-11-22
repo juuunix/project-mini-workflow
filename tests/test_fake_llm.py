@@ -1,10 +1,10 @@
 import pytest
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
-from mini_agent import messages
-from mini_agent.fake_llm import FakeLLM
-from mini_agent.search import Collection
-from mini_agent.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME, SearchArtifact
+from mini_workflow import messages
+from mini_workflow.fake_llm import FakeLLM
+from mini_workflow.search import Collection
+from mini_workflow.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME, SearchArtifact
 
 LEAVE_QUESTION = "연차휴가 이월은 최대 며칠까지 가능한지 찾아줘"
 

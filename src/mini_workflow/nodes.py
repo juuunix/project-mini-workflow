@@ -10,10 +10,10 @@ from langgraph.graph import MessagesState
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from mini_agent import messages
-from mini_agent.log import Event, log_event
-from mini_agent.search import Collection, DocumentSearch, best_passage
-from mini_agent.tools import (
+from mini_workflow import messages
+from mini_workflow.log import Event, log_event
+from mini_workflow.search import Collection, DocumentSearch, best_passage
+from mini_workflow.tools import (
     DATE_TOOL_NAME,
     SEARCH_TOOL_NAME,
     DateArtifact,

@@ -1,4 +1,4 @@
-"""mini_agent 패키지의 로그를 한 줄에 JSON 객체 하나로(JSON Lines) 파일에 남기는 설정.
+"""mini_workflow 패키지의 로그를 한 줄에 JSON 객체 하나로(JSON Lines) 파일에 남기는 설정.
 
 모든 줄은 같은 바깥 칸(time, level, logger, run, event)을 가지고, 이벤트마다 다른 값은
 data 하나에 담는다. data에 무엇이 들어갈지는 이벤트가 정한다(Event의 설명).
@@ -18,13 +18,13 @@ from enum import StrEnum
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from mini_agent import messages
+from mini_workflow import messages
 
-LOG_FILE = Path("logs") / "mini-agent.log"
+LOG_FILE = Path("logs") / "mini-workflow.log"
 # 파일이 1MB를 넘으면 예전 파일로 돌려 3개까지 남겨, 로그 전체가 4MB를 넘지 않게 한다.
 LOG_MAX_BYTES = 1_000_000
 LOG_BACKUP_COUNT = 3
-PACKAGE_LOGGER = "mini_agent"
+PACKAGE_LOGGER = "mini_workflow"
 
 
 class Event(StrEnum):

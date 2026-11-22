@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from mini_agent.search import (
+from mini_workflow.search import (
     Collection,
     DocumentLoadError,
     DocumentSearch,

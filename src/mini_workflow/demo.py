@@ -8,22 +8,22 @@ from langgraph.types import RetryPolicy
 from rich.console import Console
 from rich.text import Text
 
-from mini_agent import messages
-from mini_agent.document_history import build_document_graph
-from mini_agent.engine import run_graph
-from mini_agent.fake_llm import FakeLLM
-from mini_agent.graph import LLM_RETRY_POLICY, build_agent_graph
-from mini_agent.log import Event, file_logging, log_event, log_run
-from mini_agent.report import not_run_report, run_report
-from mini_agent.result import RunResult
-from mini_agent.scenarios import (
+from mini_workflow import messages
+from mini_workflow.document_history import build_document_graph
+from mini_workflow.engine import run_graph
+from mini_workflow.fake_llm import FakeLLM
+from mini_workflow.graph import LLM_RETRY_POLICY, build_agent_graph
+from mini_workflow.log import Event, file_logging, log_event, log_run
+from mini_workflow.report import not_run_report, run_report
+from mini_workflow.result import RunResult
+from mini_workflow.scenarios import (
     DEMO_NODE_LIMITS,
     DEMO_SCENARIOS,
     TIMEOUT_QUESTION,
     Scenario,
     Workflow,
 )
-from mini_agent.search import DocumentLoadError, DocumentSearch
+from mini_workflow.search import DocumentLoadError, DocumentSearch
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
 

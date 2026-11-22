@@ -7,13 +7,13 @@ from typing import Any
 import pytest
 from langgraph.graph.state import CompiledStateGraph
 
-from mini_agent.demo import main
-from mini_agent.engine import run_graph
-from mini_agent.graph import LLM_RETRY_POLICY
-from mini_agent.log import LOG_FILE, Event
-from mini_agent.report import NOT_RUN
-from mini_agent.result import RunResult
-from mini_agent.scenarios import DEMO_QUESTIONS
+from mini_workflow.demo import main
+from mini_workflow.engine import run_graph
+from mini_workflow.graph import LLM_RETRY_POLICY
+from mini_workflow.log import LOG_FILE, Event
+from mini_workflow.report import NOT_RUN
+from mini_workflow.result import RunResult
+from mini_workflow.scenarios import DEMO_QUESTIONS
 
 LOG_LINE_KEYS = {"time", "level", "logger", "run", "event", "data"}
 
@@ -28,7 +28,7 @@ def test_main_prints_demo_and_exits_normally(
     docs_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setattr(
-        "mini_agent.demo.LLM_RETRY_POLICY",
+        "mini_workflow.demo.LLM_RETRY_POLICY",
         LLM_RETRY_POLICY._replace(initial_interval=0),
     )
 
@@ -56,13 +56,15 @@ def test_unexpected_error_in_one_question_does_not_stop_demo(
             raise RuntimeError("고장")
         return run_graph(graph, initial_state, node_limits=node_limits)
 
-    monkeypatch.setattr("mini_agent.demo.run_graph", run_graph_breaking_on_one_question)
     monkeypatch.setattr(
-        "mini_agent.demo.LLM_RETRY_POLICY",
+        "mini_workflow.demo.run_graph", run_graph_breaking_on_one_question
+    )
+    monkeypatch.setattr(
+        "mini_workflow.demo.LLM_RETRY_POLICY",
         LLM_RETRY_POLICY._replace(initial_interval=0),
     )
 
-    caplog.set_level(logging.INFO, logger="mini_agent")
+    caplog.set_level(logging.INFO, logger="mini_workflow")
 
     main(["--docs-dir", str(docs_dir)])
 
@@ -81,7 +83,7 @@ def test_main_writes_log_file(
     docs_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        "mini_agent.demo.LLM_RETRY_POLICY",
+        "mini_workflow.demo.LLM_RETRY_POLICY",
         LLM_RETRY_POLICY._replace(initial_interval=0),
     )
 

@@ -7,8 +7,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
-from mini_agent.engine import run_graph
-from mini_agent.result import RecordKind, RunStatus, StopKind
+from mini_workflow.engine import run_graph
+from mini_workflow.result import RecordKind, RunStatus, StopKind
 
 
 class PathState(TypedDict):

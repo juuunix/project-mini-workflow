@@ -14,8 +14,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from mini_agent import messages
-from mini_agent.result import ExecutionRecord, RecordKind, RunResult
+from mini_workflow import messages
+from mini_workflow.result import ExecutionRecord, RecordKind, RunResult
 
 START = "START"
 END = "END"

@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from mini_agent.search import Collection
+from mini_workflow.search import Collection
 
 SEARCH_TOOL_NAME = "search_documents"
 DATE_TOOL_NAME = "get_today"

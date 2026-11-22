@@ -1,7 +1,7 @@
 from langchain_core.messages import AIMessage
 
-from mini_agent.report import format_output, table_rows
-from mini_agent.result import (
+from mini_workflow.report import format_output, table_rows
+from mini_workflow.result import (
     ExecutionRecord,
     RecordKind,
     RunResult,

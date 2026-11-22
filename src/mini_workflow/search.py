@@ -6,7 +6,7 @@ from pathlib import Path
 
 from rank_bm25 import BM25Okapi
 
-from mini_agent import messages
+from mini_workflow import messages
 
 WORD_PATTERN = re.compile(r"[0-9A-Za-z가-힣]+")
 

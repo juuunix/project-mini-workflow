@@ -4,7 +4,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage
 
-from mini_agent.nodes import LLM_NODE, SEARCH_NODE
+from mini_workflow.nodes import LLM_NODE, SEARCH_NODE
 
 
 class Workflow(StrEnum):

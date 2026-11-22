@@ -1,5 +1,5 @@
 [project]
-name = "mini-agent"
+name = "mini-workflow"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
 dependencies = [
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mini-agent-demo = "mini_agent.demo:main"
+mini-workflow-demo = "mini_workflow.demo:main"
 
 [tool.ruff]
 target-version = "py313"
@@ -50,4 +50,4 @@ requires = ["uv_build>=0.11.29,<0.12"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "mini_agent"
+module-name = "mini_workflow"

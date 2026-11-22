@@ -8,9 +8,9 @@ from langgraph.errors import GraphRecursionError
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import TaskResultPayload
 
-from mini_agent import messages
-from mini_agent.log import Event, log_event
-from mini_agent.result import (
+from mini_workflow import messages
+from mini_workflow.log import Event, log_event
+from mini_workflow.result import (
     ExecutionRecord,
     RecordKind,
     RunResult,

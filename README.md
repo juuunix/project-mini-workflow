@@ -11,7 +11,7 @@
 설치(이미지 만들기, 처음 한 번):
 
 ```
-docker build -t mini-agent .
+docker build -t mini-workflow .
 ```
 
 Python 3.13과 필요한 패키지가 이미지 안에 설치됩니다.
@@ -19,13 +19,13 @@ Python 3.13과 필요한 패키지가 이미지 안에 설치됩니다.
 시연:
 
 ```
-docker run --rm -t mini-agent
+docker run --rm -t mini-workflow
 ```
 
 테스트:
 
 ```
-docker run --rm mini-agent pytest
+docker run --rm mini-workflow pytest
 ```
 
 ## 시연 내용

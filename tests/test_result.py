@@ -1,4 +1,4 @@
-from mini_agent.result import (
+from mini_workflow.result import (
     ExecutionRecord,
     RecordKind,
     RunResult,
