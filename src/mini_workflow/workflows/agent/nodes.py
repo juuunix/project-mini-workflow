@@ -13,6 +13,7 @@ from langgraph.types import Command
 from mini_workflow import messages
 from mini_workflow.log import Event, log_event
 from mini_workflow.search import Collection, DocumentSearch, best_passage
+from mini_workflow.workflows.agent import messages as agent_messages
 from mini_workflow.workflows.agent.tools import (
     DATE_TOOL_NAME,
     SEARCH_TOOL_NAME,
@@ -89,7 +90,7 @@ class RagSearchNode:
 
     def _run(self, call: ToolCall) -> ToolMessage:
         if call["name"] != SEARCH_TOOL_NAME:
-            raise ValueError(messages.unsupported_tool(SEARCH_NODE, call["name"]))
+            raise ValueError(agent_messages.unsupported_tool(SEARCH_NODE, call["name"]))
         args = cast(SearchArgs, call["args"])
         collection = Collection(args["collection"])
         query = args["query"]
@@ -133,7 +134,7 @@ class DateNode:
 
     def _run(self, call: ToolCall) -> ToolMessage:
         if call["name"] != DATE_TOOL_NAME:
-            raise ValueError(messages.unsupported_tool(DATE_NODE, call["name"]))
+            raise ValueError(agent_messages.unsupported_tool(DATE_NODE, call["name"]))
         today = self._today().isoformat()
         artifact: DateArtifact = {"date": today}
         return ToolMessage(content=today, tool_call_id=call["id"], artifact=artifact)
@@ -141,7 +142,7 @@ class DateNode:
 
 def error_guide(state: AgentState) -> MessagesUpdate:
     failure = state["failure"]
-    guide = messages.error_guide(
+    guide = agent_messages.error_guide(
         failure["node"], failure["reason"], failure["attempts"]
     )
     return {"messages": [AIMessage(guide)]}

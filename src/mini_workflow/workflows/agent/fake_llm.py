@@ -5,8 +5,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
-from mini_workflow import messages
 from mini_workflow.search import Collection
+from mini_workflow.workflows.agent import messages
 from mini_workflow.workflows.agent.tools import (
     DATE_TOOL_NAME,
     SEARCH_TOOL_NAME,

@@ -6,8 +6,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import RetryPolicy
 
-from mini_workflow import messages
 from mini_workflow.search import DocumentSearch
+from mini_workflow.workflows.agent import messages
 from mini_workflow.workflows.agent.nodes import (
     DATE_NODE,
     ERROR_GUIDE_NODE,

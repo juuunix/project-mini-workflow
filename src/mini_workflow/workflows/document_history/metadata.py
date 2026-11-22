@@ -1,8 +1,8 @@
 import re
 from typing import TypedDict
 
-from mini_workflow import messages
 from mini_workflow.search import Document
+from mini_workflow.workflows.document_history import messages
 
 CURRENT_STATUS = "현행"
 END_DATE_KEY = "폐지일 또는 개정일"

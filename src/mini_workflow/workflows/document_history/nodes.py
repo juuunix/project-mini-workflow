@@ -1,8 +1,8 @@
 import operator
 from typing import Annotated, NotRequired, TypedDict
 
-from mini_workflow import messages
 from mini_workflow.search import Collection, Document, DocumentSearch
+from mini_workflow.workflows.document_history import messages
 from mini_workflow.workflows.document_history.metadata import (
     CURRENT_STATUS,
     DocumentMetadata,

@@ -1,8 +1,8 @@
 import pytest
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
-from mini_workflow import messages
 from mini_workflow.search import Collection
+from mini_workflow.workflows.agent import messages
 from mini_workflow.workflows.agent.fake_llm import FakeLLM
 from mini_workflow.workflows.agent.tools import (
     DATE_TOOL_NAME,
