@@ -1,6 +1,14 @@
 from langchain_core.messages import AIMessage
+from rich.console import Console
 
-from mini_workflow.report import final_answer, format_output, input_of, table_rows
+from mini_workflow.report import (
+    answer_panel,
+    final_answer,
+    format_output,
+    input_of,
+    result_text,
+    table_rows,
+)
 from mini_workflow.result import (
     ExecutionRecord,
     RecordKind,
@@ -61,6 +69,20 @@ def test_failed_error_handler_is_shown_as_failure() -> None:
     rows = table_rows(result)
 
     assert rows[1] == ("2", "llm → 오류 처리", "실패", "llm", "", "KeyError: 'x'")
+
+
+def test_summary_under_short_answer_is_not_cut() -> None:
+    history = [
+        ExecutionRecord(kind=RecordKind.NODE, node=node, output={})
+        for node in ["llm", "date", "llm"]
+    ]
+    result = RunResult(history=history, state={"report": "짧은 답"})
+    console = Console(width=120, color_system=None)
+
+    with console.capture() as capture:
+        console.print(answer_panel(result))
+
+    assert result_text(result) in capture.get()
 
 
 def test_input_without_question_is_shown_as_keys_and_values() -> None:

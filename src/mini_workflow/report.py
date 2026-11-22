@@ -3,6 +3,7 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from rich import box
+from rich.cells import cell_len
 from rich.console import Group, RenderableType
 from rich.panel import Panel
 from rich.table import Table
@@ -117,7 +118,7 @@ def step_rows(history: list[ExecutionRecord]) -> tuple[list[Row], str]:
 
 
 def answer_panel(result: RunResult) -> Panel:
-    """답변을 담고, 결과(성공·실패와 노드별 실행 횟수)는 상자 아래 테두리에 적는다.
+    """답변을 담고, 결과(성공·실패와 노드별 방문 횟수)는 상자 아래 테두리에 적는다.
 
     답변 없이 중단된 실행은 결과만 담은 상자로 보여 준다.
     """
@@ -125,13 +126,15 @@ def answer_panel(result: RunResult) -> Panel:
     answer = final_answer(result.state)
     if answer is None:
         return Panel(summary, title="결과", title_align="left", expand=False)
+    # 상자 폭이 답변에 맞춰지면 아래 테두리의 결과가 잘리므로, 결과 길이만큼은 넓힌다.
+    longest_line = max(cell_len(line) for line in answer.splitlines() or [""])
     return Panel(
         Text(answer),
         title="답변",
         title_align="left",
         subtitle=summary,
         subtitle_align="right",
-        expand=False,
+        width=max(longest_line, summary.cell_len + 2) + 4,
     )
 
 
