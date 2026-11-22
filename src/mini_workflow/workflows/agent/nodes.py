@@ -13,7 +13,7 @@ from langgraph.types import Command
 from mini_workflow import messages
 from mini_workflow.log import Event, log_event
 from mini_workflow.search import Collection, DocumentSearch, best_passage
-from mini_workflow.tools import (
+from mini_workflow.workflows.agent.tools import (
     DATE_TOOL_NAME,
     SEARCH_TOOL_NAME,
     DateArtifact,

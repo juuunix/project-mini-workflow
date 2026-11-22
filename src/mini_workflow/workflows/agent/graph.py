@@ -7,7 +7,8 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import RetryPolicy
 
 from mini_workflow import messages
-from mini_workflow.nodes import (
+from mini_workflow.search import DocumentSearch
+from mini_workflow.workflows.agent.nodes import (
     DATE_NODE,
     ERROR_GUIDE_NODE,
     LLM_NODE,
@@ -22,8 +23,7 @@ from mini_workflow.nodes import (
     tool_calls_of,
     tool_error_handler,
 )
-from mini_workflow.search import DocumentSearch
-from mini_workflow.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME
+from mini_workflow.workflows.agent.tools import DATE_TOOL_NAME, SEARCH_TOOL_NAME
 
 # LLM 호출의 시간 초과와 연결 오류는 일시적이라고 보고, 1초부터 2배씩 기다리며 3번까지 시도한다.
 # LangGraph의 기본 설정은 TimeoutError를 재시도하지 않아 재시도할 예외를 직접 지정한다.

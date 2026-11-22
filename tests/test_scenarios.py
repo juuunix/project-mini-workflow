@@ -2,9 +2,6 @@ import pytest
 from langchain_core.messages import HumanMessage
 
 from mini_workflow.engine import run_graph
-from mini_workflow.fake_llm import FakeLLM
-from mini_workflow.graph import LLM_RETRY_POLICY, build_agent_graph
-from mini_workflow.nodes import DATE_NODE, ERROR_GUIDE_NODE, LLM_NODE, SEARCH_NODE
 from mini_workflow.result import RecordKind, RunStatus
 from mini_workflow.scenarios import (
     DEMO_NODE_LIMITS,
@@ -12,6 +9,14 @@ from mini_workflow.scenarios import (
     TIMEOUT_QUESTION,
 )
 from mini_workflow.search import DocumentSearch
+from mini_workflow.workflows.agent.fake_llm import FakeLLM
+from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY, build_agent_graph
+from mini_workflow.workflows.agent.nodes import (
+    DATE_NODE,
+    ERROR_GUIDE_NODE,
+    LLM_NODE,
+    SEARCH_NODE,
+)
 
 ERROR_HANDLING = f"오류 처리:{LLM_NODE}"
 SEARCH_TWICE = [LLM_NODE, SEARCH_NODE, LLM_NODE, SEARCH_NODE, LLM_NODE]

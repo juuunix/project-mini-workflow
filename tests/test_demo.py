@@ -9,11 +9,11 @@ from langgraph.graph.state import CompiledStateGraph
 
 from mini_workflow.demo import main
 from mini_workflow.engine import run_graph
-from mini_workflow.graph import LLM_RETRY_POLICY
 from mini_workflow.log import LOG_FILE, Event
 from mini_workflow.report import NOT_RUN
 from mini_workflow.result import RunResult
 from mini_workflow.scenarios import DEMO_QUESTIONS
+from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY
 
 LOG_LINE_KEYS = {"time", "level", "logger", "run", "event", "data"}
 

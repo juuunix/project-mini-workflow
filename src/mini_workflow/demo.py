@@ -9,10 +9,7 @@ from rich.console import Console
 from rich.text import Text
 
 from mini_workflow import messages
-from mini_workflow.document_history import build_document_graph
 from mini_workflow.engine import run_graph
-from mini_workflow.fake_llm import FakeLLM
-from mini_workflow.graph import LLM_RETRY_POLICY, build_agent_graph
 from mini_workflow.log import Event, file_logging, log_event, log_run
 from mini_workflow.report import not_run_report, run_report
 from mini_workflow.result import RunResult
@@ -24,6 +21,9 @@ from mini_workflow.scenarios import (
     Workflow,
 )
 from mini_workflow.search import DocumentLoadError, DocumentSearch
+from mini_workflow.workflows.agent.fake_llm import FakeLLM
+from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY, build_agent_graph
+from mini_workflow.workflows.document_history import build_document_graph
 
 DEFAULT_DOCS_DIR = Path("data") / "docs"
 
