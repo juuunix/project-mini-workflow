@@ -38,12 +38,7 @@ def run_demo(
 
     실행하는 대로 출력하면 재시도로 기다리는 시나리오만 늦게 나타나 멈춘 것처럼 보인다.
     """
-    llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
-    search = DocumentSearch.from_directory(docs_dir)
-    graphs = {
-        Workflow.AGENT: build_agent_graph(llm, search, llm_retry),
-        Workflow.DOCUMENT_HISTORY: build_document_graph(search),
-    }
+    graphs = build_demo_graphs(DocumentSearch.from_directory(docs_dir), llm_retry)
 
     results = [
         run_scenario(graphs[scenario.workflow], number, scenario)
@@ -62,6 +57,16 @@ def run_demo(
         else:
             console.print(not_run_report(scenario.initial_state, result))
         console.print()
+
+
+def build_demo_graphs(
+    search: DocumentSearch, llm_retry: RetryPolicy = LLM_RETRY_POLICY
+) -> dict[Workflow, CompiledStateGraph]:
+    llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
+    return {
+        Workflow.AGENT: build_agent_graph(llm, search, llm_retry),
+        Workflow.DOCUMENT_HISTORY: build_document_graph(search),
+    }
 
 
 def run_scenario(

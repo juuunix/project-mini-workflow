@@ -1,24 +1,21 @@
 import pytest
-from langgraph.graph.state import CompiledStateGraph
 
+from mini_workflow.demo import build_demo_graphs
 from mini_workflow.engine import run_graph
 from mini_workflow.result import RecordKind, RunStatus
 from mini_workflow.scenarios import (
     DEMO_NODE_LIMITS,
     DEMO_SCENARIOS,
     TIMEOUT_QUESTION,
-    Workflow,
 )
 from mini_workflow.search import DocumentSearch
-from mini_workflow.workflows.agent.fake_llm import FakeLLM
-from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY, build_agent_graph
+from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY
 from mini_workflow.workflows.agent.nodes import (
     DATE_NODE,
     ERROR_GUIDE_NODE,
     LLM_NODE,
     SEARCH_NODE,
 )
-from mini_workflow.workflows.document_history.graph import build_document_graph
 from mini_workflow.workflows.document_history.nodes import (
     FIND_DOCUMENTS_NODE,
     NO_DOCUMENTS_NODE,
@@ -51,15 +48,6 @@ SCENARIOS = {
 }
 
 
-def demo_graphs(search: DocumentSearch) -> dict[Workflow, CompiledStateGraph]:
-    llm = FakeLLM(timeout_questions=frozenset({TIMEOUT_QUESTION}))
-    no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
-    return {
-        Workflow.AGENT: build_agent_graph(llm, search, llm_retry=no_wait),
-        Workflow.DOCUMENT_HISTORY: build_document_graph(search),
-    }
-
-
 def test_every_demo_scenario_has_expected_path() -> None:
     assert {scenario.label for scenario in DEMO_SCENARIOS} == {
         label for label, _ in SCENARIOS.values()
@@ -70,7 +58,8 @@ def test_every_demo_scenario_has_expected_path() -> None:
 def test_demo_scenario_follows_expected_path(name: str, search: DocumentSearch) -> None:
     label, expected_path = SCENARIOS[name]
     [scenario] = [s for s in DEMO_SCENARIOS if s.label == label]
-    graph = demo_graphs(search)[scenario.workflow]
+    no_wait = LLM_RETRY_POLICY._replace(initial_interval=0)
+    graph = build_demo_graphs(search, no_wait)[scenario.workflow]
 
     result = run_graph(graph, scenario.initial_state, node_limits=DEMO_NODE_LIMITS)
 
