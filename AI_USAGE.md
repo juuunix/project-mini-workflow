@@ -47,6 +47,7 @@
 - (46) 코드를 워크플로우별 폴더로 나눴는데 문구 모듈만 공용 하나에 두 워크플로우의 문구가 섞여 있어, 구조를 정리하는 김에 문구 모듈도 함께 나누는 것이 낫다고 판단했습니다. 문구가 쓰이는 곳을 AI에 확인받은 뒤, 공용 문구(`src/mini_workflow/messages.py`)와 워크플로우별 문구(`src/mini_workflow/workflows/agent/messages.py`, `src/mini_workflow/workflows/document_history/messages.py`)로 나누도록 요청했습니다.
 - (47) 추가한 문서 이력 워크플로우의 로그를 확인하다가, 형식이 틀려 건너뛴 문서가 경고로 남지 않고 노드 출력 안에만 남는 것을 보고, 이를 경고 로그로 남기도록 문서 이력 노드(`src/mini_workflow/workflows/document_history/nodes.py`)와 로그 이벤트(`src/mini_workflow/log.py`), 그 테스트(`tests/test_document_history.py`)를 고치는 작업을 AI에 요청했습니다.
 - (48) 문서 이력 워크플로우의 조건들을 검사해 보니, 문서가 많이 찾아지는 주제에서는 메타데이터 읽기 반복이 노드별 실행 횟수 상한에 걸려 실행이 중단되는 경우가 있었습니다. 이는 코드의 오류가 아니라 시연 정책에 따른 차이라고 보고, 코드를 고치기보다 시연에 맞는 문서 수 상한을 정하도록 시연 설정(`src/mini_workflow/scenarios.py`, `src/mini_workflow/demo.py`)을 고치는 작업을 AI에 요청했습니다. 함께 문서 수 상한에 1보다 작은 값이 들어오면 거부하도록 문서 이력 노드(`src/mini_workflow/workflows/document_history/nodes.py`)와 그 테스트(`tests/test_document_history.py`)를 고쳤습니다.
+- (49) 시연 결과를 보니 표와 결과 줄의 노드 실행 횟수(`llm 2회`)가 재시도 횟수(`3번 시도`)와 헷갈려, 노드에 들른 횟수라는 뜻이 드러나도록 "실행"을 "방문"으로 바꾸게 시연 출력(`src/mini_workflow/report.py`)과 그 테스트(`tests/test_graph.py`), 아키텍처 문서(`docs/architecture.md`)를 고치는 작업을 AI에 요청했습니다.
 
 ## 채택한 제안과 이유
 - (1) 제안: 과제 안내문을 바탕으로 작성한 요구사항 문서 초안

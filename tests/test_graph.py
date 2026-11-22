@@ -73,7 +73,7 @@ def test_table_rows_show_failure_and_handling(search: DocumentSearch) -> None:
     assert rows[2][5].startswith("TimeoutError")
     assert "attempts: 3" in rows[3][5]
     assert result_text(result) == (
-        "성공 (오류 처리 1건) · llm 2회, search 1회, error_guide 1회"
+        "성공 (오류 처리 1건) · llm 2회 방문, search 1회 방문, error_guide 1회 방문"
     )
 
 
@@ -83,7 +83,7 @@ def test_result_text_has_no_error_note_without_failures(
     graph = build_agent_graph(FakeLLM(), search)
     result = run_graph(graph, {"messages": [HumanMessage(LEAVE_QUESTION)]})
 
-    assert result_text(result) == "성공 · llm 2회, search 1회"
+    assert result_text(result) == "성공 · llm 2회 방문, search 1회 방문"
 
 
 def test_llm_timeout_is_retried_then_guided(search: DocumentSearch) -> None:
