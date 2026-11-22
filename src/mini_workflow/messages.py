@@ -42,6 +42,11 @@ def llm_timeout(question: str) -> str:
 
 
 COLLECTION_LABELS = {"current": "현행", "archive": "보관"}
+WORKFLOW_LABELS = {"agent": "에이전트", "document_history": "문서 이력"}
+
+
+def scenario_heading(workflow: str, number: int, total: int) -> str:
+    return f"{WORKFLOW_LABELS[workflow]} [{number}/{total}]"
 
 
 def unsupported_tool(node: str, tool_name: str) -> str:

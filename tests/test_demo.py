@@ -12,7 +12,7 @@ from mini_workflow.engine import run_graph
 from mini_workflow.log import LOG_FILE, Event
 from mini_workflow.report import NOT_RUN
 from mini_workflow.result import RunResult
-from mini_workflow.scenarios import DEMO_QUESTIONS
+from mini_workflow.scenarios import DEMO_QUESTIONS, DEMO_SCENARIOS
 from mini_workflow.workflows.agent.graph import LLM_RETRY_POLICY
 
 LOG_LINE_KEYS = {"time", "level", "logger", "run", "event", "data"}
@@ -37,6 +37,8 @@ def test_main_prints_demo_and_exits_normally(
     output = capsys.readouterr().out
     assert DEMO_QUESTIONS[0] in output
     assert DEMO_QUESTIONS[-1] in output
+    assert "에이전트 [1/6]" in output
+    assert "문서 이력 [2/2]" in output
 
 
 def test_unexpected_error_in_one_question_does_not_stop_demo(
@@ -45,14 +47,14 @@ def test_unexpected_error_in_one_question_does_not_stop_demo(
     capsys: pytest.CaptureFixture[str],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    broken_question = DEMO_QUESTIONS[1]
+    broken = DEMO_SCENARIOS[1]
 
     def run_graph_breaking_on_one_question(
         graph: CompiledStateGraph,
         initial_state: dict[str, Any],
         node_limits: Mapping[str, int] | None = None,
     ) -> RunResult:
-        if initial_state["messages"][0].text == broken_question:
+        if initial_state is broken.initial_state:
             raise RuntimeError("고장")
         return run_graph(graph, initial_state, node_limits=node_limits)
 
@@ -75,7 +77,7 @@ def test_unexpected_error_in_one_question_does_not_stop_demo(
     # 화면에는 한 줄만 보이고, 원인을 찾을 traceback은 로그에 남는다.
     [error] = [r for r in caplog.records if r.levelno == logging.ERROR]
     assert getattr(error, "event") == Event.SCENARIO_CRASHED
-    assert getattr(error, "data")["scenario"] == broken_question
+    assert getattr(error, "data")["scenario"] == broken.label
     assert error.exc_info is not None
 
 

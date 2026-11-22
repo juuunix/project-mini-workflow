@@ -1,9 +1,3 @@
-"""실행 결과를 시연 화면에 보여 줄 Rich 표로 바꾼다.
-
-출력 열은 노드가 반환한 값의 공통 모양(메시지의 글, 도구 요청, 그 밖의 키와 값)만 보고
-만든다. 특정 노드나 도구를 알지 않으므로, 새 노드를 추가해도 이 모듈을 고치지 않는다.
-"""
-
 from collections import Counter
 from typing import Any
 
@@ -16,6 +10,7 @@ from rich.text import Text
 
 from mini_workflow import messages
 from mini_workflow.result import ExecutionRecord, RecordKind, RunResult
+from mini_workflow.search import Document
 
 START = "START"
 END = "END"
@@ -40,27 +35,31 @@ STOP_KIND_LABELS = {
 }
 
 
-def run_report(result: RunResult) -> RenderableType:
-    """실행 하나를 질문 상자, 단계 표, 답변 상자로 만든다."""
-    parts: list[RenderableType] = []
-    question = first_question(result.state)
-    if question is not None:
-        parts.append(question_panel(question))
-    parts.append(step_table(result))
-    parts.append(answer_panel(result))
-    return Group(*parts)
+def run_report(initial_state: dict[str, Any], result: RunResult) -> RenderableType:
+    """실행 하나를 입력 상자, 단계 표, 답변 상자로 만든다."""
+    return Group(input_panel(initial_state), step_table(result), answer_panel(result))
 
 
-def not_run_report(question: str, error: Exception) -> RenderableType:
+def not_run_report(initial_state: dict[str, Any], error: Exception) -> RenderableType:
     summary = Text()
     summary.append(NOT_RUN, style="bold red")
     summary.append(f" · {messages.error_reason(error)}")
     result = Panel(summary, title="결과", title_align="left", expand=False)
-    return Group(question_panel(question), result)
+    return Group(input_panel(initial_state), result)
 
 
-def question_panel(question: str) -> Panel:
-    return Panel(Text(question), title="질문", title_align="left", expand=False)
+def input_panel(initial_state: dict[str, Any]) -> Panel:
+    title, text = input_of(initial_state)
+    return Panel(Text(text), title=title, title_align="left", expand=False)
+
+
+def input_of(initial_state: dict[str, Any]) -> tuple[str, str]:
+    """질문이 있으면 질문을, 없으면 첫 상태의 키와 값을 보여 줄 제목과 글."""
+    question = first_question(initial_state)
+    if question is not None:
+        return "질문", question
+    lines = [f"{key}: {format_value(value)}" for key, value in initial_state.items()]
+    return "입력", "\n".join(lines)
 
 
 def step_table(result: RunResult) -> Table:
@@ -175,6 +174,11 @@ def format_argument(value: object) -> str:
 
 
 def format_value(value: object) -> str:
+    if isinstance(value, Document):
+        return f"{value.title} ({value.doc_id})"
+    if isinstance(value, str) and "\n" in value:
+        first, *rest = value.splitlines()
+        return f"{first} (외 {len(rest)}줄)"
     if isinstance(value, dict):
         items = ", ".join(f"{key}: {format_value(item)}" for key, item in value.items())
         return f"{{{items}}}"
@@ -184,11 +188,12 @@ def format_value(value: object) -> str:
 
 
 def final_answer(state: dict[str, Any]) -> str | None:
-    """마지막 메시지가 도구 요청이 아닌 글로 된 LLM 응답이면 그 글을 답변으로 본다."""
+    """마지막 메시지가 도구 요청이 아닌 글로 된 LLM 응답이면 그 글을, LLM 응답이 없으면
+    워크플로우가 남긴 정리 결과(report)를 답변으로 본다."""
     messages = state.get("messages", [])
     if messages and isinstance(messages[-1], AIMessage) and not messages[-1].tool_calls:
         return messages[-1].text
-    return None
+    return state.get("report")
 
 
 def result_text(result: RunResult) -> str:

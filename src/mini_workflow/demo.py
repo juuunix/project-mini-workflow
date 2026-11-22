@@ -1,5 +1,6 @@
 import argparse
 import logging
+from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -48,14 +49,18 @@ def run_demo(
         run_scenario(graphs[scenario.workflow], number, scenario)
         for number, scenario in enumerate(DEMO_SCENARIOS, start=1)
     ]
-    for number, (scenario, result) in enumerate(
-        zip(DEMO_SCENARIOS, results, strict=True), start=1
-    ):
-        console.rule(Text(f"[{number}/{len(results)}]"))
+    totals = Counter(scenario.workflow for scenario in DEMO_SCENARIOS)
+    numbers: Counter[Workflow] = Counter()
+    for scenario, result in zip(DEMO_SCENARIOS, results, strict=True):
+        numbers[scenario.workflow] += 1
+        heading = messages.scenario_heading(
+            scenario.workflow, numbers[scenario.workflow], totals[scenario.workflow]
+        )
+        console.rule(Text(heading))
         if isinstance(result, RunResult):
-            console.print(run_report(result))
+            console.print(run_report(scenario.initial_state, result))
         else:
-            console.print(not_run_report(scenario.label, result))
+            console.print(not_run_report(scenario.initial_state, result))
         console.print()
 
 

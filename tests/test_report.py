@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage
 
-from mini_workflow.report import format_output, table_rows
+from mini_workflow.report import final_answer, format_output, input_of, table_rows
 from mini_workflow.result import (
     ExecutionRecord,
     RecordKind,
@@ -8,6 +8,7 @@ from mini_workflow.result import (
     StopKind,
     StopReason,
 )
+from mini_workflow.search import Collection, Document
 
 
 def test_message_text_is_shown_as_output() -> None:
@@ -45,4 +46,31 @@ def test_stopped_run_ends_with_stop_row() -> None:
         "",
         "",
         "노드별 실행 횟수 상한 초과 (search, 상한 4회)",
+    )
+
+
+def test_input_without_question_is_shown_as_keys_and_values() -> None:
+    assert input_of({"topic": "배포"}) == ("입력", "topic: 배포")
+
+
+def test_report_is_the_answer_when_there_is_no_llm_answer() -> None:
+    assert final_answer({"topic": "배포", "report": "정리 결과"}) == "정리 결과"
+
+
+def test_document_is_shown_by_title_and_id() -> None:
+    document = Document(
+        doc_id="tech-02-deploy",
+        title="서비스 배포 절차",
+        collection=Collection.CURRENT,
+        text="# 서비스 배포 절차\n\n긴 본문",
+    )
+
+    assert format_output({"documents": [document]}) == (
+        "documents=[서비스 배포 절차 (tech-02-deploy)]"
+    )
+
+
+def test_multiline_text_is_shown_by_first_line() -> None:
+    assert format_output({"report": "첫 줄\n\n둘째 줄\n셋째 줄"}) == (
+        "report=첫 줄 (외 3줄)"
     )
